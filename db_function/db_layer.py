@@ -64,20 +64,27 @@ class AdvancedDatabase(MySQLDatabase):
 
     def insert_using_procedure(self, procedure_name, params):
         """
-        Insert data using a stored procedure.
+        Insert data using a stored procedure and return a message.
         :param procedure_name: Name of the procedure.
         :param params: Parameters for the procedure.
-        :return: Affected rows.
+        :return: The output message from the stored procedure.
         """
         connection = self.get_connection()
         try:
             cursor = connection.cursor()
+
+            # Call the procedure
             cursor.callproc(procedure_name, params)
+
+            # Fetch the output message
+            for result in cursor.stored_results():
+                message = result.fetchone()[0]  # Assuming the procedure returns a single message
+
             connection.commit()
-            print(f"Data inserted using procedure '{procedure_name}'.")
-            return cursor.rowcount
+            print(f"Procedure '{procedure_name}' executed successfully.")
+            return message  # Return the message
         except mysql.connector.Error as err:
-            print(f"Error executing insert procedure '{procedure_name}': {err}")
+            print(f"Error executing procedure '{procedure_name}': {err}")
             raise
         finally:
             cursor.close()

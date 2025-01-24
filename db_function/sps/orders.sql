@@ -10,6 +10,9 @@ CREATE TABLE orders (
     FOREIGN KEY (receiver_customer_id) REFERENCES customer(customer_id)
 );
 
+ALTER TABLE orders ADD COLUMN status ENUM('Not Delivered', 'In Transit', 'Picked Up', 'Delivered') DEFAULT 'Not Delivered';
+
+
 CREATE TABLE order_commodities (
     id INT AUTO_INCREMENT PRIMARY KEY, -- Unique ID for the record
     order_id INT NOT NULL, -- Foreign key referencing orders(order_id)
@@ -36,7 +39,8 @@ DELIMITER //
 CREATE PROCEDURE InsertOrderWithProducts(
     IN sender_id INT,
     IN receiver_id INT,
-    IN products JSON
+    IN products JSON,
+    IN initial_status ENUM('Not Delivered', 'In Transit', 'Picked Up', 'Delivered')
 )
 BEGIN
     DECLARE total_order_amount DECIMAL(10, 2) DEFAULT 0.00;
@@ -46,21 +50,20 @@ BEGIN
     DECLARE current_price DECIMAL(10, 2);
     DECLARE current_total_price DECIMAL(10, 2);
 
-    -- Insert into the orders table (auto-increment handles order_id)
-    INSERT INTO orders (sender_customer_id, receiver_customer_id, total_amount)
-    VALUES (sender_id, receiver_id, 0);
+    -- Insert into the orders table with the provided status
+    INSERT INTO orders (sender_customer_id, receiver_customer_id, total_amount, status)
+    VALUES (sender_id, receiver_id, 0, initial_status);
 
-    -- Get the last inserted order ID (auto-incremented order_id)
+    -- Get the last inserted order ID
     SET new_order_id = LAST_INSERT_ID();
 
     -- Loop through the JSON string to extract and process each product
     WHILE JSON_LENGTH(products) > 0 DO
-        -- Extract current productid, quantity, and price
         SET current_productid = CAST(JSON_UNQUOTE(JSON_EXTRACT(products, '$[0].productid')) AS UNSIGNED);
         SET current_quantity = CAST(JSON_UNQUOTE(JSON_EXTRACT(products, '$[0].quantity')) AS UNSIGNED);
         SET current_price = CAST(JSON_UNQUOTE(JSON_EXTRACT(products, '$[0].price')) AS DECIMAL(10, 2));
 
-        -- Calculate total price for the current product
+        -- Calculate total price for the product
         SET current_total_price = current_quantity * current_price;
 
         -- Insert into order_commodities table
@@ -74,7 +77,7 @@ BEGIN
         SET products = JSON_REMOVE(products, '$[0]');
     END WHILE;
 
-    -- Update total amount in orders table
+    -- Update the total amount in the orders table
     UPDATE orders
     SET total_amount = total_order_amount
     WHERE order_id = new_order_id;
@@ -93,20 +96,70 @@ CALL InsertOrderWithProducts(
     '[{"productid": 1, "quantity": 2, "price": 21}, {"productid": 2, "quantity": 1, "price": 30}]'
 );
 
+
+DELIMITER //
+
+CREATE PROCEDURE UpdateOrderStatus(
+    IN input_order_id INT,
+    IN new_status ENUM('Not Delivered', 'In Transit', 'Picked Up', 'Delivered')
+)
+BEGIN
+    -- Attempt to update the order status
+    UPDATE orders
+    SET status = new_status
+    WHERE order_id = input_order_id;
+
+    -- Check if the status was updated
+    IF ROW_COUNT() > 0 THEN
+        SELECT 'Order status updated successfully' AS message;
+    ELSE
+        SELECT 'No order found with the given order_id' AS message;
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE GetOrdersByStatus(
+    IN input_status ENUM('Not Delivered', 'In Transit', 'Picked Up', 'Delivered')
+)
+BEGIN
+    -- Retrieve orders matching the specified status
+    SELECT * FROM orders WHERE status = input_status;
+END //
+
+DELIMITER ;
+
+
+CALL InsertOrderWithProducts(
+    1, -- Sender ID
+    2, -- Receiver ID
+    '[{"productid": 1, "quantity": 2, "price": 21}, {"productid": 2, "quantity": 1, "price": 30}]', -- Products JSON
+    'In Transit' -- Initial status
+);
+
+CALL GetOrdersByStatus('In Transit');
+
+CALL UpdateOrderStatus(1, 'Delivered');
+
+
 DELIMITER //
 
 CREATE PROCEDURE UpdateOrder(
     IN input_order_id INT,
     IN sender_id INT,
     IN receiver_id INT,
-    IN new_total_amount DECIMAL(10, 2)
+    IN new_total_amount DECIMAL(10, 2),
+    IN new_status ENUM('Not Delivered', 'In Transit', 'Picked Up', 'Delivered')
 )
 BEGIN
     -- Attempt to update the order
     UPDATE orders
     SET sender_customer_id = sender_id,
         receiver_customer_id = receiver_id,
-        total_amount = new_total_amount
+        total_amount = new_total_amount,
+        status = new_status -- Update the status column
     WHERE order_id = input_order_id; -- Use the input parameter in the WHERE clause
 
     -- Check if any rows were updated
@@ -120,9 +173,15 @@ END //
 DELIMITER ;
 
 
+CALL UpdateOrder(
+    13,                -- Order ID
+    1,                -- Sender ID
+    2,                -- Receiver ID
+    150.50,           -- New total amount
+    'Delivered'       -- New status
+);
 
 
-CALL UpdateOrder(1, 6, 7, 100.010);
 
 DELIMITER //
 
