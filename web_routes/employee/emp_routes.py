@@ -2,7 +2,6 @@ from flask import request, jsonify
 from db_function import db
 from web_routes.employee import employee_bp
 
-
 # CREATE Employee
 @employee_bp.route('/create_employee', methods=['POST'])
 def create_employee():

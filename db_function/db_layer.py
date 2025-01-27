@@ -47,14 +47,21 @@ class AdvancedDatabase(MySQLDatabase):
         connection = self.get_connection()
         try:
             cursor = connection.cursor()
-            cursor.callproc(procedure_name, params)
+
+            # Handle procedures with and without parameters
+            if params:
+                cursor.callproc(procedure_name, params)
+            else:
+                cursor.callproc(procedure_name)
+
             print(f"Procedure '{procedure_name}' called successfully.")
 
-            # Fetching results for procedures with SELECT statements
+            # Fetch results from SELECT statements in the procedure
             results = []
             for result in cursor.stored_results():
                 results.append(result.fetchall())
-            return results
+
+            return results  # Return the results
         except mysql.connector.Error as err:
             print(f"Error executing procedure '{procedure_name}': {err}")
             raise

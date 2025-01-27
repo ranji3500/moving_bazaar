@@ -6,6 +6,9 @@ CREATE TABLE commodities (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE commodities
+ADD COLUMN image VARCHAR(255) DEFAULT NULL;
+
 
 
 DELIMITER $$
@@ -13,15 +16,17 @@ DELIMITER $$
 CREATE PROCEDURE insertCommodity(
     IN p_productname VARCHAR(255),
     IN p_productdescription TEXT,
-    IN p_unit_price DECIMAL(10, 2)
+    IN p_unit_price DECIMAL(10, 2),
+    IN p_image VARCHAR(255)
 )
 BEGIN
-    INSERT INTO commodities ( productname, productdescription, unit_price)
-    VALUES ( p_productname, p_productdescription, p_unit_price);
+    INSERT INTO commodities (productname, productdescription, unit_price, image)
+    VALUES (p_productname, p_productdescription, p_unit_price, p_image);
     SELECT 'Commodity inserted successfully' AS message;
 END $$
 
 DELIMITER ;
+
 
 
 DELIMITER $$
@@ -30,11 +35,15 @@ CREATE PROCEDURE updateCommodity(
     IN p_productid INT,
     IN p_productname VARCHAR(255),
     IN p_productdescription TEXT,
-    IN p_unit_price DECIMAL(10, 2)
+    IN p_unit_price DECIMAL(10, 2),
+    IN p_image VARCHAR(255)
 )
 BEGIN
     UPDATE commodities
-    SET productname = p_productname, productdescription = p_productdescription, unit_price = p_unit_price
+    SET productname = p_productname,
+        productdescription = p_productdescription,
+        unit_price = p_unit_price,
+        image = p_image
     WHERE productid = p_productid;
     
     IF ROW_COUNT() > 0 THEN
@@ -45,6 +54,7 @@ BEGIN
 END $$
 
 DELIMITER ;
+
 
 
 DELIMITER $$
@@ -68,7 +78,7 @@ DELIMITER $$
 
 CREATE PROCEDURE getCommodities()
 BEGIN
-    SELECT productid, productname, productdescription, unit_price, created_at
+    SELECT productid, productname, productdescription, unit_price, image, created_at
     FROM commodities;
 END $$
 
@@ -81,7 +91,7 @@ CREATE PROCEDURE getCommodityDetails(
     IN p_productid INT
 )
 BEGIN
-    SELECT productid, productname, productdescription, unit_price, created_at
+    SELECT productid, productname, productdescription, unit_price, image, created_at
     FROM commodities
     WHERE productid = p_productid;
     
@@ -92,16 +102,16 @@ END $$
 
 DELIMITER ;
 
-CALL insertCommodity('Vegetables', 'Fresh vegetables, packed in 10x10x10', 21.00);
-CALL insertCommodity('Fruits', 'Fresh vegetables, packed in 10x10x10', 21.00);
 
+CALL insertCommodity('Fruits', 'Fresh fruits, packed in 10x10x10', 22.50, 'images/fruits.jpg');
 
-CALL updateCommodity(1, 'Organic Vegetables', 'Fresh organic vegetables, packed in 10x10x10', 25.00);
+CALL updateCommodity(4, 'Organic Vegetables', 'Fresh organic vegetables, packed in 10x10x10', 25.00, 'images/organic_vegetables.jpg');
 
 CALL deleteCommodity(1);
 
 CALL getCommodities();
 
 CALL getCommodityDetails(1);
+
 
 
