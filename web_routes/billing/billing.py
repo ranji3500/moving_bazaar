@@ -1,11 +1,11 @@
 from flask import jsonify, request
-from . import orders_bp
+from . import billing_bp
 import mysql.connector
 from db_function import db
 
 
 # ✅ Create a new order
-@orders_bp.route('/create', methods=['POST'])
+@billing_bp.route('/create', methods=['POST'])
 def create_order():
     data = request.json
     try:
@@ -13,58 +13,47 @@ def create_order():
         params = (data['sender_id'], data['receiver_id'], data['created_by'])
         result = db.insert_using_procedure(procedure_name, params)
 
-        return jsonify({"message":  result}), 201
+        return jsonify({"message": "Order Created Successfully", "order_id": result[0][0][0]}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ✅ Get Order Details
-@orders_bp.route('/orders/details/<int:order_id>', methods=['GET'])
+@billing_bp.route('/details/<int:order_id>', methods=['GET'])
 def get_order_details(order_id):
     try:
         procedure_name = "get_order_details"
         params = (order_id,)
+        result = db.call_procedure(procedure_name, params)
 
-        # ✅ Call the stored procedure
-        results = db.call_procedure(procedure_name, params)
+        if result and len(result) >= 2:
+            order_info = result[0][0]
+            order_items = result[1]
 
-        # ✅ Check if results exist
-        if results and len(results) >= 2:
-            order_info = results[0][0]  # First result set (Order details)
-            order_items = results[1]  # Second result set (Order items)
-
-            # ✅ Construct response JSON
-            response = {
+            return jsonify({
                 "order_id": order_info[0],
                 "sender_id": order_info[1],
                 "receiver_id": order_info[2],
                 "created_by": order_info[3],
                 "order_status": order_info[4],
                 "created_at": order_info[5].isoformat(),
-                "updated_at": order_info[6].isoformat(),
-                "total_price": float(order_info[7]),
                 "items": [
                     {
                         "order_item_id": item[0],
-                        "commodity_id": item[1],
-                        "commodity_name": item[2],
-                        "quantity": item[3],
-                        "price": float(item[4]),
-                        "subtotal": float(item[5])
+                        "commodity_name": item[1],
+                        "quantity": item[2],
+                        "price": float(item[3]),
+                        "subtotal": float(item[4])
                     } for item in order_items
                 ]
-            }
-
-            return jsonify(response), 200
+            }), 200
         else:
-            return jsonify({"Status": "Failure", "Message": "Order ID not found"}), 404
+            return jsonify({"message": "Order not found"}), 404
 
-    except mysql.connector.Error as err:
-        return jsonify({"Status": "Failure", "Message": str(err)}), 500
     except Exception as e:
-        return jsonify({"Status": "Failure", "Message": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 # ✅ Edit an Order
-@orders_bp.route('/edit', methods=['PUT'])
+@billing_bp.route('/edit', methods=['PUT'])
 def edit_order():
     data = request.json
     try:
@@ -76,7 +65,7 @@ def edit_order():
         return jsonify({"error": str(e)}), 500
 
 # ✅ Delete an Order
-@orders_bp.route('/delete/<int:order_id>', methods=['DELETE'])
+@billing_bp.route('/delete/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
     try:
         procedure_name = "delete_order"

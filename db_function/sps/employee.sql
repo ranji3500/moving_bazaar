@@ -191,34 +191,42 @@ CALL ForgotPassword('john.doe@example.com', 'new_hashed_password');
 
 DELIMITER $$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `LoginEmployee`(
+CREATE PROCEDURE LoginEmployee(
     IN input_email VARCHAR(255),
     IN input_password VARCHAR(255)
 )
 BEGIN
-    -- Declare a variable to store the login message
+    DECLARE emp_id INT;
+    DECLARE emp_email VARCHAR(255);
+    DECLARE login_status INT;
     DECLARE login_message VARCHAR(255);
 
     -- Check if user exists with the given email and password
-    IF EXISTS (
-        SELECT 1 
-        FROM users
-        WHERE employee_email = input_email 
-          AND employee_password = input_password
-          COLLATE utf8mb4_general_ci -- Case-insensitive comparison
-    ) THEN
-        -- Set login success message
+    SELECT employeeid, employee_email
+    INTO emp_id, emp_email
+    FROM users
+    WHERE employee_email = input_email 
+      AND employee_password = input_password
+      COLLATE utf8mb4_general_ci -- Case-insensitive comparison
+    LIMIT 1;
+
+    -- If match found, return success
+    IF emp_id IS NOT NULL THEN
+        SET login_status = 1;
         SET login_message = 'Login successful';
     ELSE
-        -- Set login failure message
+        SET login_status = 0;
+        SET emp_id = NULL;
+        SET emp_email = NULL;
         SET login_message = 'Invalid email or password';
     END IF;
 
-    -- Return the login message
-    SELECT login_message AS result;
+    -- Return the login result
+    SELECT login_status AS result_status, emp_id AS employee_id, emp_email AS email, login_message AS message;
 END$$
 
 DELIMITER ;
+
 
 
 CALL LoginEmployee('john.doe@example.com', 'hashed_password');

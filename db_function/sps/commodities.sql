@@ -1,117 +1,196 @@
-CREATE TABLE commodities (
-    productid INT AUTO_INCREMENT PRIMARY KEY,
-    productname VARCHAR(255),
-    productdescription TEXT,
-    unit_price DECIMAL(10, 2) DEFAULT 21.00,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE commodity (
+    commodity_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each commodity
+    item_name VARCHAR(255) NOT NULL,              -- Name of the commodity
+    item_photo VARCHAR(255),                      -- Image URL or path for the item
+    min_order_qty INT NOT NULL DEFAULT 1,         -- Minimum order quantity
+    max_order_qty INT NOT NULL DEFAULT 10,        -- Maximum order quantity
+    price DECIMAL(10,2) NOT NULL DEFAULT 30.00,   -- Default price in AED
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
 );
 
-ALTER TABLE commodities
-ADD COLUMN image VARCHAR(255) DEFAULT NULL;
 
-
-
-DELIMITER $$
-
-CREATE PROCEDURE insertCommodity(
-    IN p_productname VARCHAR(255),
-    IN p_productdescription TEXT,
-    IN p_unit_price DECIMAL(10, 2),
-    IN p_image VARCHAR(255)
-)
-BEGIN
-    INSERT INTO commodities (productname, productdescription, unit_price, image)
-    VALUES (p_productname, p_productdescription, p_unit_price, p_image);
-    SELECT 'Commodity inserted successfully' AS message;
-END $$
-
-DELIMITER ;
-
+ALTER TABLE commodity 
+ADD CONSTRAINT unique_commodity 
+UNIQUE (item_name);
 
 
 DELIMITER $$
 
-CREATE PROCEDURE updateCommodity(
-    IN p_productid INT,
-    IN p_productname VARCHAR(255),
-    IN p_productdescription TEXT,
-    IN p_unit_price DECIMAL(10, 2),
-    IN p_image VARCHAR(255)
+CREATE PROCEDURE insert_commodity(
+    IN p_item_name VARCHAR(255),
+    IN p_item_photo VARCHAR(255),
+    IN p_min_order_qty INT,
+    IN p_max_order_qty INT,
+    IN p_price DECIMAL(10,2)
 )
 BEGIN
-    UPDATE commodities
-    SET productname = p_productname,
-        productdescription = p_productdescription,
-        unit_price = p_unit_price,
-        image = p_image
-    WHERE productid = p_productid;
-    
-    IF ROW_COUNT() > 0 THEN
-        SELECT 'Commodity updated successfully' AS message;
+    DECLARE message VARCHAR(255);
+
+    -- Handle SQL Errors
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 message = MESSAGE_TEXT;
+        SELECT CONCAT('SQL Error: ', message) AS error_message;
+    END;
+
+    -- Check if the commodity already exists
+    IF EXISTS (SELECT 1 FROM commodity WHERE item_name = p_item_name) THEN
+        SELECT 'Error: Commodity already exists with the same name.' AS message;
     ELSE
-        SELECT 'Commodity not found' AS message;
+        -- Insert New Commodity
+        INSERT INTO commodity (item_name, item_photo, min_order_qty, max_order_qty, price)
+        VALUES (p_item_name, p_item_photo, p_min_order_qty, p_max_order_qty, p_price);
+
+        SELECT 'Commodity inserted successfully.' AS message;
     END IF;
-END $$
+END$$
 
 DELIMITER ;
 
 
-
 DELIMITER $$
 
-CREATE PROCEDURE deleteCommodity(
-    IN p_productid INT
+CREATE PROCEDURE update_commodity(
+    IN p_commodity_id INT,
+    IN p_item_name VARCHAR(255),
+    IN p_item_photo VARCHAR(255),
+    IN p_min_order_qty INT,
+    IN p_max_order_qty INT,
+    IN p_price DECIMAL(10,2)
 )
 BEGIN
-    DELETE FROM commodities WHERE productid = p_productid;
-    
-    IF ROW_COUNT() > 0 THEN
-        SELECT 'Commodity deleted successfully' AS message;
+    DECLARE message VARCHAR(255);
+    DECLARE rows_affected INT DEFAULT 0;
+
+    -- Handle SQL Errors
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 message = MESSAGE_TEXT;
+        SELECT CONCAT('SQL Error: ', message) AS error_message;
+    END;
+
+    -- Check if the commodity exists
+    IF EXISTS (SELECT 1 FROM commodity WHERE commodity_id = p_commodity_id) THEN
+        -- Prevent duplicate item name
+        IF EXISTS (SELECT 1 FROM commodity WHERE item_name = p_item_name AND commodity_id <> p_commodity_id) THEN
+            SELECT 'Error: Another commodity with the same name exists.' AS message;
+        ELSE
+            -- Update the commodity record
+            UPDATE commodity
+            SET 
+                item_name = COALESCE(p_item_name, item_name),
+                item_photo = COALESCE(p_item_photo, item_photo),
+                min_order_qty = COALESCE(p_min_order_qty, min_order_qty),
+                max_order_qty = COALESCE(p_max_order_qty, max_order_qty),
+                price = COALESCE(p_price, price)
+            WHERE commodity_id = p_commodity_id;
+
+            SET rows_affected = ROW_COUNT();
+
+            IF rows_affected > 0 THEN
+                SELECT 'Commodity updated successfully.' AS message;
+            ELSE
+                SELECT 'No changes were made.' AS message;
+            END IF;
+        END IF;
     ELSE
-        SELECT 'Commodity not found' AS message;
+        SELECT 'Error: Commodity not found.' AS message;
     END IF;
-END $$
-
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE PROCEDURE getCommodities()
-BEGIN
-    SELECT productid, productname, productdescription, unit_price, image, created_at
-    FROM commodities;
-END $$
+END$$
 
 DELIMITER ;
 
 
+
+
 DELIMITER $$
 
-CREATE PROCEDURE getCommodityDetails(
-    IN p_productid INT
+CREATE PROCEDURE delete_commodity(
+    IN p_commodity_id INT
 )
 BEGIN
-    SELECT productid, productname, productdescription, unit_price, image, created_at
-    FROM commodities
-    WHERE productid = p_productid;
+    DECLARE message VARCHAR(255);
+    DECLARE rows_affected INT DEFAULT 0;
+
+    -- Handle SQL Errors
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 message = MESSAGE_TEXT;
+        SELECT CONCAT('SQL Error: ', message) AS error_message;
+    END;
+
+    -- Check if the commodity exists
+    DELETE FROM commodity WHERE commodity_id = p_commodity_id;
     
-    IF ROW_COUNT() = 0 THEN
-        SELECT 'Commodity not found' AS message;
+    SET rows_affected = ROW_COUNT();
+
+    IF rows_affected > 0 THEN
+        SELECT 'Commodity deleted successfully.' AS message;
+    ELSE
+        SELECT 'Error: Commodity not found.' AS message;
     END IF;
-END $$
+END$$
 
 DELIMITER ;
 
 
-CALL insertCommodity('Fruits', 'Fresh fruits, packed in 10x10x10', 22.50, 'images/fruits.jpg');
+DELIMITER $$
 
-CALL updateCommodity(4, 'Organic Vegetables', 'Fresh organic vegetables, packed in 10x10x10', 25.00, 'images/organic_vegetables.jpg');
+CREATE PROCEDURE get_commodity_by_id(
+    IN p_commodity_id INT
+)
+BEGIN
+    DECLARE message VARCHAR(255);
 
-CALL deleteCommodity(1);
+    -- Error Handling
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 message = MESSAGE_TEXT;
+        SELECT CONCAT('SQL Error: ', message) AS error_message;
+    END;
 
-CALL getCommodities();
+    -- Check if the commodity exists
+    IF EXISTS (SELECT 1 FROM commodity WHERE commodity_id = p_commodity_id) THEN
+        SELECT commodity_id, item_name, item_photo, min_order_qty, max_order_qty, price, created_at
+        FROM commodity
+        WHERE commodity_id = p_commodity_id;
+    ELSE
+        SELECT 'Error: Commodity not found.' AS message;
+    END IF;
+END$$
 
-CALL getCommodityDetails(1);
+DELIMITER ;
+
+CALL insert_commodity(' Vege', 'veg_image.jpg', 1, 10, 35.50);
+
+CALL update_commodity(7, 'Fresh', 'fruits.jpg', 2, 15, 40.00);
+
+CALL delete_commodity(7);
+
+CALL get_commodity_by_id(5);
+
+
+DELIMITER $$
+
+CREATE PROCEDURE get_commodities_list()
+BEGIN
+    -- Handle SQL Errors
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'SQL Error occurred while fetching commodities' AS message;
+    END;
+
+    -- Fetch all commodities
+    SELECT commodity_id, item_name, item_photo, min_order_qty, max_order_qty, price, created_at 
+    FROM commodity;
+END$$
+
+DELIMITER ;
+
+
+CALL get_commodities_list();
+
+
 
 
 

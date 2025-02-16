@@ -1,6 +1,8 @@
 from flask import request, jsonify
 from db_function import db
 from web_routes.employee import employee_bp
+from flask_jwt_extended import create_access_token
+from datetime import timedelta
 
 # CREATE Employee
 @employee_bp.route('/create_employee', methods=['POST'])
@@ -65,19 +67,36 @@ def login_employee():
     try:
         procedure_name = "LoginEmployee"
         params = (data.get('email'), data.get('password'))
-        result = db.insert_using_procedure(procedure_name, params)
-        if result:
-            if "Invalid email or password" in result:
-                return jsonify({"message": result}), 401
-            return jsonify({
-                "message": "Login successful",
-                "employee": result
-            }), 200
-        else:
-            return jsonify({"message": "Invalid email or password"}), 401
+
+        # Call stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        if result and len(result[0]) > 0:
+            response_tuple = result[0][0]  # Extract first tuple from result
+
+            # Extracting values from tuple
+            result_status = response_tuple[0]  # 1 for success, 0 for failure
+            employee_id = response_tuple[1]  # Employee ID
+            email = response_tuple[2]  # Employee Email
+            message = response_tuple[3]  # Login Message
+
+            if result_status == 1:
+                # Generate JWT token for session management
+                access_token = create_access_token(identity=employee_id, expires_delta=timedelta(hours=2))
+
+                return jsonify({
+                    "message": message,
+                    "token": access_token,
+                    "employee": {
+                        "employee_id": employee_id,
+                        "email": email
+                    }
+                }), 200
+            else:
+                return jsonify({"message": message}), 401
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 # FORGOT PASSWORD
 @employee_bp.route('/forgot_password', methods=['POST'])
 def forgot_password():
