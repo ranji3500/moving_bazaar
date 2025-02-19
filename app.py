@@ -9,7 +9,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'  # Replace with your secret key
+app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'  
 jwt = JWTManager(app)
 app.register_blueprint(employee_bp, url_prefix='/employee')
 app.register_blueprint(commodities_bp, url_prefix='/commodities')

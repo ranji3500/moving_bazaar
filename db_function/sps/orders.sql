@@ -25,29 +25,190 @@ CREATE TABLE order_items (
 );
 
 
-CREATE TABLE billing (
-    billing_id VARCHAR(50) PRIMARY KEY,  -- Unique Billing Reference (e.g., BILL-DUBAI-YYYYMMDD-HHMMSS-ORDERID)
+
+
+CREATE TABLE commodities_photos (
+    photo_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    user_id INT NOT NULL,  -- The user who created the billing (same as created_by in orders)
-    total_price DECIMAL(10,2) NOT NULL,  -- Total cost of the order
-    payment_status ENUM('Pending', 'Paid', 'Failed', 'Refunded') DEFAULT 'Pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,  -- Links to orders
-    FOREIGN KEY (user_id) REFERENCES users(employeeid)  -- Links to user who created the billing
+    photo_paths JSON NOT NULL,  -- Stores multiple photo paths in JSON format
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Timestamp for when the photos were uploaded
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
 );
 
 
 
 
+-- create order using sender id , reciver id ,  createdby
+
 DELIMITER $$
 
+DROP PROCEDURE IF EXISTS create_order$$
+
 CREATE PROCEDURE create_order(
-    IN sender_id INT,
-    IN receiver_id INT,
-    IN created_by INT
+    IN sender_id_param INT,
+    IN receiver_id_param INT,
+    IN created_by_param INT
 )
 BEGIN
-    DECLARE order_id INT;
+    DECLARE custom_order_id VARCHAR(8);
+    DECLARE error_message VARCHAR(255);
+    DECLARE timestamp_part VARCHAR(4);
+    DECLARE random_part VARCHAR(4);
+
+    -- ✅ Start a labeled block to use LEAVE properly
+    proc_block: BEGIN 
+
+        -- ✅ Start transaction
+        START TRANSACTION;
+
+        -- ✅ Check if sender exists
+        IF NOT EXISTS (SELECT 1 FROM customer WHERE customer_id = sender_id_param) THEN
+            ROLLBACK;
+            SELECT 'Failure' AS Status, 'Sender does not exist in customer table' AS Message;
+            LEAVE proc_block;
+        END IF;
+
+        -- ✅ Check if receiver exists
+        IF NOT EXISTS (SELECT 1 FROM customer WHERE customer_id = receiver_id_param) THEN
+            ROLLBACK;
+            SELECT 'Failure' AS Status, 'Receiver does not exist in customer table' AS Message;
+            LEAVE proc_block;
+        END IF;
+
+        -- ✅ Check if created_by user exists (assuming `users` table)
+        IF NOT EXISTS (SELECT 1 FROM users WHERE employeeid = created_by_param) THEN
+            ROLLBACK;
+            SELECT 'Failure' AS Status, 'Created_by user does not exist' AS Message;
+            LEAVE proc_block;
+        END IF;
+
+        -- ✅ Generate Custom Order ID
+        SET timestamp_part = RIGHT(DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'), 4);
+        SET random_part = LPAD(FLOOR(RAND() * 10000), 4, '0');
+        SET custom_order_id = CONCAT(timestamp_part, random_part);
+
+        -- ✅ Insert the new order with the generated order ID
+        INSERT INTO orders (order_id, sender_id, receiver_id, created_by, order_status, created_at, updated_at)
+        VALUES (custom_order_id, sender_id_param, receiver_id_param, created_by_param, 'Pending', NOW(), NOW());
+
+        -- ✅ If insertion failed, rollback
+        IF ROW_COUNT() = 0 THEN
+            ROLLBACK;
+            SELECT 'Failure' AS Status, 'Could not create Order' AS Message;
+            LEAVE proc_block;
+        ELSE
+            -- ✅ Commit transaction and return success
+            COMMIT;
+            SELECT 'Success' AS Status, 'Order Created Successfully' AS Message, custom_order_id AS OrderID;
+        END IF;
+
+    END proc_block;  -- ✅ End of labeled block
+
+END$$
+
+DELIMITER ;
+
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS add_order_items$$
+
+CREATE PROCEDURE add_order_items(
+    IN p_order_id INT,
+    IN p_commodities JSON
+)
+BEGIN
+    -- ✅ Declare variables at the beginning
+    DECLARE total_price DECIMAL(10,2) DEFAULT 0;
+    DECLARE i INT DEFAULT 0;
+    DECLARE commodities_length INT;
+    DECLARE commodity_id INT;
+    DECLARE quantity INT;
+    DECLARE price DECIMAL(10,2);
+    DECLARE order_item_id INT;
+    DECLARE error_message VARCHAR(255);
+    DECLARE order_items_list TEXT DEFAULT ''; -- To store all order item IDs
+
+    -- ✅ Error Handler for SQL Exceptions
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 error_message = MESSAGE_TEXT;
+        ROLLBACK;  -- Rollback on error
+        SELECT 'Failure' AS Status, error_message AS Message;
+    END;
+
+    -- ✅ Start transaction
+    START TRANSACTION;
+
+    -- ✅ Check if the order exists
+    IF (SELECT COUNT(*) FROM orders WHERE order_id = p_order_id) = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Order ID does not exist';
+    END IF;
+
+    -- ✅ Get JSON array length
+    SET commodities_length = JSON_LENGTH(p_commodities);
+
+    -- ✅ Loop through JSON array
+    WHILE i < commodities_length DO
+        -- Extract values
+        SET commodity_id = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].commodity_id')));
+        SET quantity = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].quantity')));
+        SET price = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].price')));
+
+        -- ✅ Ensure commodity exists
+        IF (SELECT COUNT(*) FROM commodity WHERE commodity_id = commodity_id) = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Invalid commodity_id';
+        END IF;
+
+        -- ✅ Insert order item
+        INSERT INTO order_items (order_id, commodity_id, quantity, total_price)
+        VALUES (p_order_id, commodity_id, quantity, price * quantity);
+
+        -- Get last inserted order_item_id
+        SET order_item_id = LAST_INSERT_ID();
+
+        -- ✅ Add order_item_id to the list
+        IF order_items_list = '' THEN
+            SET order_items_list = order_item_id;
+        ELSE
+            SET order_items_list = CONCAT(order_items_list, ', ', order_item_id);
+        END IF;
+
+        -- ✅ Add to total price
+        SET total_price = total_price + (price * quantity);
+
+        -- Move to next item
+        SET i = i + 1;
+    END WHILE;
+
+    -- ✅ Commit transaction
+    COMMIT;
+
+    -- ✅ Return final success message with order ID, all order item IDs, and total price
+    SELECT 
+        'Success' AS Status, 
+        'All Order Items Added Successfully' AS Message, 
+        p_order_id AS OrderID, 
+        order_items_list AS OrderItemIDs, 
+        total_price AS TotalPrice;
+END$$
+
+DELIMITER ;
+
+
+
+       
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS insert_commodity_photos$$
+
+CREATE PROCEDURE insert_commodity_photos(
+    IN p_order_id INT,
+    IN p_photo_paths JSON  -- JSON array of photo paths
+)
+BEGIN
+    DECLARE order_exists INT;
     DECLARE error_message VARCHAR(255) DEFAULT NULL;
 
     -- ✅ Error Handler for SQL Exceptions
@@ -57,154 +218,32 @@ BEGIN
         SELECT 'Failure' AS Status, error_message AS Message;
     END;
 
-    -- ✅ Insert the new order (Allowing duplicates)
-    INSERT INTO orders (sender_id, receiver_id, created_by, order_status)
-    VALUES (sender_id, receiver_id, created_by, 'Pending');
-
-    -- ✅ Get the newly created order_id
-    SET order_id = LAST_INSERT_ID();
-
-    -- ✅ Return success message with order_id
-    SELECT 'Success' AS Status, 'Order Created Successfully' AS Message, order_id AS OrderID;
-END$$
-
-DELIMITER ;
-
-
-
-
-DELIMITER $$
-
-CREATE PROCEDURE add_order_items(
-    IN p_order_id INT,
-    IN p_commodities JSON  -- JSON array of commodities (commodity_id, quantity, price)
-)
-BEGIN
-    DECLARE total_price DECIMAL(10,2) DEFAULT 0;
-    DECLARE i INT DEFAULT 0;
-    DECLARE commodities_length INT;
-    DECLARE commodity_id INT;
-    DECLARE quantity INT;
-    DECLARE price DECIMAL(10,2);
-
-    -- Step 1: Ensure order_id exists before inserting items
-    IF (SELECT COUNT(*) FROM orders WHERE order_id = p_order_id) = 0 THEN
+    -- ✅ Step 1: Ensure `order_id` exists before inserting photos
+    SELECT COUNT(*) INTO order_exists FROM orders WHERE order_id = p_order_id;
+    IF order_exists = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Order ID does not exist';
     END IF;
 
-    -- Step 2: Get the length of JSON array
-    SET commodities_length = JSON_LENGTH(p_commodities);
-
-    -- Step 3: Loop through the JSON array and insert each commodity
-    WHILE i < commodities_length DO
-        SET commodity_id = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].commodity_id')));
-        SET quantity = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].quantity')));
-        SET price = JSON_UNQUOTE(JSON_EXTRACT(p_commodities, CONCAT('$[', i, '].price')));
-
-        -- Ensure commodity_id exists
-        IF (SELECT COUNT(*) FROM commodity WHERE commodity_id = commodity_id) = 0 THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Invalid commodity_id';
-        END IF;
-
-        -- Insert order item
-        INSERT INTO order_items (order_id, commodity_id, quantity, total_price)
-        VALUES (p_order_id, commodity_id, quantity, price * quantity);
-
-        -- Add to the total price
-        SET total_price = total_price + (price * quantity);
-
-        -- Move to the next item
-        SET i = i + 1;
-    END WHILE;
-
-    -- Return the total price
-    SELECT total_price AS 'Total Price';
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE PROCEDURE generate_billing(
-    IN p_order_id INT,
-    IN p_created_by INT
-)
-BEGIN
-    DECLARE total_price DECIMAL(10,2) DEFAULT 0;
-    DECLARE billing_id VARCHAR(20);
-    DECLARE unique_seq INT;
-    DECLARE item_count INT;
-    DECLARE attempt INT DEFAULT 0;
-    DECLARE duplicate_found INT DEFAULT 1; -- 1 means true, 0 means false
-    DECLARE error_message VARCHAR(255) DEFAULT NULL;
-    
-    -- ✅ Capture exact MySQL error details
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        GET DIAGNOSTICS CONDITION 1 error_message = MESSAGE_TEXT;
-        SELECT 'Failure' AS Status, error_message AS Message;
-    END;
-
-    -- ✅ Ensure `order_id` exists in `orders` table
-    SELECT COUNT(*) INTO item_count FROM orders WHERE order_id = p_order_id;
-    IF item_count = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Order ID not found';
-    END IF;
-
-    -- ✅ Ensure `order_id` exists in `order_items`
-    SELECT COUNT(*) INTO item_count FROM order_items WHERE order_id = p_order_id;
-    IF item_count = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No items found for this order. Please add items before generating billing.';
-    END IF;
-
-    -- ✅ Correct total price calculation using quantity * unit price
-    SELECT COALESCE(SUM(oi.quantity * c.price), 0) 
-    INTO total_price 
-    FROM order_items oi
-    JOIN commodity c ON oi.commodity_id = c.commodity_id
-    WHERE oi.order_id = p_order_id;
-
-    -- ✅ Generate a unique numeric billing ID (YYYYMMDD + Sequence + Order ID)
-    WHILE duplicate_found = 1 AND attempt < 5 DO
-        -- Get the last sequence number for today's date
-        SELECT COALESCE(MAX(CAST(SUBSTRING(billing_id, 9, 4) AS UNSIGNED)), 0) + 1 
-        INTO unique_seq
-        FROM billing 
-        WHERE SUBSTRING(billing_id, 1, 8) = DATE_FORMAT(NOW(), '%Y%m%d');
-
-        -- Generate the billing ID
-        SET billing_id = CONCAT(DATE_FORMAT(NOW(), '%Y%m%d'), LPAD(unique_seq, 4, '0'), p_order_id);
-
-        -- Check if the billing ID already exists
-        SELECT COUNT(*) INTO item_count FROM billing WHERE billing_id = billing_id;
-        IF item_count = 0 THEN
-            SET duplicate_found = 0; -- No duplicate found, exit loop
-        ELSE
-            SET attempt = attempt + 1; -- Retry with next sequence
-        END IF;
-    END WHILE;
-
-    -- ✅ If max attempts reached, return error
-    IF duplicate_found = 1 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Unable to generate a unique billing ID. Try again later.';
-    END IF;
-
-    -- ✅ Insert into `billing` table
-    INSERT INTO billing (billing_id, order_id, user_id, total_price, payment_status)
-    VALUES (billing_id, p_order_id, p_created_by, total_price, 'Pending');
+    -- ✅ Step 2: Insert multiple photo paths as JSON
+    INSERT INTO commodities_photos (order_id, photo_paths)
+    VALUES (p_order_id, p_photo_paths);
 
     -- ✅ If SQL error occurred earlier, return failure response
     IF error_message IS NOT NULL THEN
         SELECT 'Failure' AS Status, error_message AS Message;
     ELSE
-        SELECT 'Success' AS Status, billing_id AS 'Billing ID', total_price AS 'Total Price';
+        -- ✅ Return success message
+        SELECT 'Success' AS Status, 'Photos inserted successfully' AS Message, p_photo_paths AS 'Inserted Photos';
     END IF;
-
 END$$
 
 DELIMITER ;
 
 
+DELIMITER $$
+
+
+CALL add_order_items(13, '[{"commodity_id": 2, "quantity": 3, "price": 40.00}, {"commodity_id": 5, "quantity": 2, "price": 35.50}]');
 
 
 
@@ -214,14 +253,6 @@ ALTER TABLE order_items
 ADD CONSTRAINT fk_order_items_order
 FOREIGN KEY (order_id) REFERENCES orders(order_id)
 ON DELETE CASCADE;
-
-CALL create_order(6, 5, 13);
-
-
-CALL add_order_items(8, '[{"commodity_id": 2, "quantity": 3, "price": 40.00}, {"commodity_id": 5, "quantity": 2, "price": 35.50}]');
-
-
-CALL generate_billing(7, 13);
 
 
 DELIMITER $$
@@ -263,7 +294,6 @@ BEGIN
 END$$
 
 DELIMITER ;
-
 
 
 DELIMITER $$
@@ -359,14 +389,6 @@ END$$
 DELIMITER ;
 
 
-CALL edit_order(8, 4, 5, 'Processing');
-
-CALL delete_order(8);
-
-
-CALL get_order(7);
-
-
 DELIMITER $$
 
 CREATE PROCEDURE get_order_commodities(
@@ -382,39 +404,9 @@ END$$
 
 DELIMITER ;
 
-DELIMITER $$
-
-CREATE PROCEDURE get_billing_by_order(
-    IN p_order_id INT
-)
-BEGIN
-    SELECT 
-        b.billing_id, b.order_id, b.user_id, b.total_price, b.payment_status, b.created_at
-    FROM billing b
-    WHERE b.order_id = p_order_id;
-END$$
-
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE PROCEDURE get_billing_by_customer(
-    IN p_customer_id INT
-)
-BEGIN
-    SELECT 
-        b.billing_id, b.order_id, o.sender_id, o.receiver_id, b.total_price, b.payment_status, b.created_at
-    FROM billing b
-    JOIN orders o ON b.order_id = o.order_id
-    WHERE o.sender_id = p_customer_id OR o.receiver_id = p_customer_id;
-END$$
-
-DELIMITER ;
 
 
-CALL get_order_commodities(7);
 
-CALL get_billing_by_order(7);
 
 
 DELIMITER $$
@@ -545,10 +537,6 @@ DELIMITER ;
 
 
 
-
-CALL edit_commodity(2, 'Premium Fresh Fruits', 'new_fruits.jpg', 50.00);
-
-
 DELIMITER $$
 
 CREATE PROCEDURE edit_order_commodity(
@@ -618,9 +606,89 @@ END$$
 
 DELIMITER ;
 
-CALL edit_order_commodity(7, 2, 5, 45.00);
+DELIMITER $$
 
-CALL recalculate_billing_price(8);
+CREATE PROCEDURE get_order_details(
+    IN p_order_id INT
+)
+BEGIN
+    DECLARE order_exists INT;
 
+    -- ✅ Check if order exists
+    SELECT COUNT(*) INTO order_exists FROM orders WHERE order_id = p_order_id;
+    IF order_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Order ID not found';
+    END IF;
+
+    -- ✅ First Result Set: Order Details (Includes Sender & Receiver Info)
+    SELECT 
+        o.order_id,
+        o.sender_id,
+        s.store_name AS sender_name,
+        o.receiver_id,
+        r.store_name AS receiver_name,
+        o.created_by,
+        u.employee_full_name AS created_by_name,
+        o.order_status,
+        o.created_at,
+        o.updated_at,
+        COALESCE(SUM(oi.quantity * c.price), 0) AS total_price
+    FROM orders o
+    LEFT JOIN customer s ON o.sender_id = s.customer_id  -- ✅ Get sender info
+    LEFT JOIN customer r ON o.receiver_id = r.customer_id  -- ✅ Get receiver info
+    LEFT JOIN users u ON o.created_by = u.employeeid  -- ✅ Get created by user info
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    LEFT JOIN commodity c ON oi.commodity_id = c.commodity_id
+    WHERE o.order_id = p_order_id
+    GROUP BY o.order_id;
+
+    -- ✅ Second Result Set: Billing Details (If Exists)
+    SELECT 
+        b.billing_id,
+        b.total_price AS billing_total_price,
+        b.payment_status,
+        b.created_at AS billing_created_at
+    FROM billing b
+    WHERE b.order_id = p_order_id;
+
+    -- ✅ Third Result Set: Order Items
+    SELECT 
+        oi.order_item_id,
+        oi.commodity_id,
+        c.item_name AS commodity_name,
+        oi.quantity,
+        c.price AS price,
+        oi.quantity * c.price AS subtotal
+    FROM order_items oi
+    JOIN commodity c ON oi.commodity_id = c.commodity_id
+    WHERE oi.order_id = p_order_id;
+END$$
+
+DELIMITER ;
+
+
+
+
+CALL create_order(4, 5, 13);
+
+CALL add_order_items(56224403, '[{"commodity_id": 2, "quantity": 3, "price": 40.00}, {"commodity_id": 5, "quantity": 2, "price": 35.50}]');
+
+
+CALL edit_order_commodity(56224403, 2, 5, 45.00);
+
+CALL recalculate_billing_price(13);
+
+CALL generate_billing(13, 13);
+
+
+CALL edit_order(8, 4, 5, 'Processing');
+
+CALL delete_order(8);
+
+CALL get_order(7);
+
+CALL get_order_details(7);
+
+CALL insert_commodity_photos(7, '["uploads/order_7/photo1.jpg", "uploads/order_7/photo2.jpg", "uploads/order_7/photo3.jpg"]');
 
 

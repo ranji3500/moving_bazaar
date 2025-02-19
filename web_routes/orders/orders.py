@@ -27,36 +27,8 @@ def get_order_details(order_id):
         # ✅ Call the stored procedure
         results = db.call_procedure(procedure_name, params)
 
-        # ✅ Check if results exist
-        if results and len(results) >= 2:
-            order_info = results[0][0]  # First result set (Order details)
-            order_items = results[1]  # Second result set (Order items)
+        return jsonify(results), 200
 
-            # ✅ Construct response JSON
-            response = {
-                "order_id": order_info[0],
-                "sender_id": order_info[1],
-                "receiver_id": order_info[2],
-                "created_by": order_info[3],
-                "order_status": order_info[4],
-                "created_at": order_info[5].isoformat(),
-                "updated_at": order_info[6].isoformat(),
-                "total_price": float(order_info[7]),
-                "items": [
-                    {
-                        "order_item_id": item[0],
-                        "commodity_id": item[1],
-                        "commodity_name": item[2],
-                        "quantity": item[3],
-                        "price": float(item[4]),
-                        "subtotal": float(item[5])
-                    } for item in order_items
-                ]
-            }
-
-            return jsonify(response), 200
-        else:
-            return jsonify({"Status": "Failure", "Message": "Order ID not found"}), 404
 
     except mysql.connector.Error as err:
         return jsonify({"Status": "Failure", "Message": str(err)}), 500
@@ -85,3 +57,18 @@ def delete_order(order_id):
         return jsonify({"message": "Order Deleted Successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+# ✅ API: Get Order Commodities
+@orders_bp.route('/get_order_commodities/<int:order_id>', methods=['GET'])
+def get_order_commodities(order_id):
+    try:
+
+        params = (order_id,)
+        results = db.insert_using_procedure("get_order_commodities", params)
+
+        commodities = []
+        for result in results:
+            commodities.extend(result.fetchall())
+
+        return jsonify({"status": "success", "commodities": commodities}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500

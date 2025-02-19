@@ -4,8 +4,31 @@ import mysql.connector
 from db_function import db
 
 
+
+
+# ✅ API: Generate Billing
+@billing_bp.route('/generate_billing', methods=['POST'])
+def generate_billing():
+    try:
+        data = request.json
+        order_id = data['order_id']
+        created_by = data['created_by']
+        paid_by = data['paid_by']
+        outstanding_amount = data['outstanding_amount']
+
+        params = (order_id, created_by, paid_by, outstanding_amount)
+
+
+        result = db.insert_using_procedure("generate_billing",params)
+
+
+        return jsonify(result), 201
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ✅ Create a new order
-@billing_bp.route('/create', methods=['POST'])
+@billing_bp.route('/get_order_commodities/<int:order_id>', methods=['GET'])
 def create_order():
     data = request.json
     try:
