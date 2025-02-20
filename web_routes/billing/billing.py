@@ -97,3 +97,14 @@ def delete_order(order_id):
         return jsonify({"message": "Order Deleted Successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# API to Get Billing Details by Employee ID
+@billing_bp.route('/billing/employee/<int:employee_id>', methods=['GET'])
+def get_billing_by_employee(employee_id):
+    try:
+        params =  (employee_id,)
+        billing_data = db.call_procedure("GetBillingByEmployeeId",params)
+        return jsonify({"billing_details": billing_data})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

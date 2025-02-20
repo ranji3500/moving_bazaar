@@ -691,4 +691,26 @@ CALL get_order_details(7);
 
 CALL insert_commodity_photos(7, '["uploads/order_7/photo1.jpg", "uploads/order_7/photo2.jpg", "uploads/order_7/photo3.jpg"]');
 
+DELIMITER $$
+
+CREATE PROCEDURE GetOrdersByEmployeeId(IN employee_id INT)
+BEGIN
+    SELECT 
+        o.order_id,
+        sender.customer_id AS sender_id,
+        sender.store_name AS sender_name,
+        receiver.customer_id AS receiver_id,
+        receiver.store_name AS receiver_name,
+        o.order_status,
+        o.created_at,
+        o.updated_at
+    FROM orders o
+    JOIN customer sender ON o.sender_id = sender.customer_id
+    JOIN customer receiver ON o.receiver_id = receiver.customer_id
+    WHERE o.created_by = employee_id;
+END $$
+
+DELIMITER ;
+
+CALL GetOrdersByEmployeeId(13);
 

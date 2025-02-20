@@ -96,5 +96,26 @@ def get_customer_by_phone():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# API to Get Customers
+@customers_bp.route('/customers', methods=['GET'])
+def get_customers():
+    try:
+        customers = db.call_procedure("CALL GetCustomers")
+
+        return jsonify({"customers": customers})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# API to Get Orders by Employee ID
+@customers_bp.route('/orders/employee/<int:employee_id>', methods=['GET'])
+def get_orders_by_employee(employee_id):
+    try:
+        params =(employee_id,)
+        orders = db.call_procedure("GetOrdersByEmployeeId",params)
+        return jsonify({"orders": orders})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 

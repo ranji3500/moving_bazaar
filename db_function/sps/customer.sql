@@ -194,5 +194,24 @@ CALL delete_customer(2);
 CALL get_customer_by_phone('050000003');
 
 
+DELIMITER $$
+
+CREATE PROCEDURE GetCustomers()
+BEGIN
+    SELECT 
+        customer_id, 
+        store_name, 
+        email, 
+        phone_number, 
+        address_line1, 
+        address_line2, 
+        city, 
+        created_at
+    FROM customer;
+END $$
+
+DELIMITER ;
+
+
 
 

@@ -229,5 +229,34 @@ DELIMITER ;
 
 
 
-CALL LoginEmployee('john.doe@example.com', 'hashed_password');
+CALL LoginEmployee('ranji@example.com', 'hashed_password');
 
+DELIMITER $$
+
+CREATE PROCEDURE GetBillingByEmployeeId(IN employee_id INT)
+BEGIN
+    SELECT 
+        b.billing_id,
+        b.order_id,
+        o.created_by AS employee_id,
+        sender.customer_id AS sender_id,
+        sender.store_name AS sender_name,
+        receiver.customer_id AS receiver_id,
+        receiver.store_name AS receiver_name,
+        b.user_id AS billed_user_id,
+        b.paid_by,
+        b.total_price,
+        b.payment_status,
+        b.created_at AS billing_created_at,
+        b.receipt_pdf
+    FROM billing b
+    JOIN orders o ON b.order_id = o.order_id
+    JOIN customer sender ON o.sender_id = sender.customer_id
+    JOIN customer receiver ON o.receiver_id = receiver.customer_id
+    WHERE o.created_by = employee_id;
+END $$
+
+DELIMITER ;
+
+
+call GetBillingByEmployeeId(13);
