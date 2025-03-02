@@ -213,5 +213,63 @@ END $$
 DELIMITER ;
 
 
+CALL insert_customer(
+    'Kumar Supermarket', 
+    'kumar.store@example.com', 
+    '9876543210', 
+    '9876543211', 
+    '12, Mount Road', 
+    'T. Nagar', 
+    'Chennai', 
+    5000.00
+);
+
+
+
+CALL insert_customer(
+    'Gupta Wholesale', 
+    'gupta.wholesale@example.com', 
+    '9823456789', 
+    '9823456790', 
+    '45, Connaught Place', 
+    'Central Delhi', 
+    'Delhi', 
+    10000.50
+);
+
+
+CALL insert_customer(
+    'Ramesh Kirana', 
+    'ramesh.kirana@example.com', 
+    '9900123456', 
+    NULL, 
+    '8th Main Road', 
+    'Indiranagar', 
+    'Bangalore', 
+    1500.25
+);
+  
+  
+CALL insert_customer(
+    'Sai Fashion', 
+    'sai.fashion@example.com', 
+    '9000011223', 
+    '9000011224', 
+    '20, Banjara Hills', 
+    'Jubilee Hills', 
+    'Hyderabad', 
+    7500.00
+);
+ 
+ CALL insert_customer(
+    'Spice Junction', 
+    'spice.junction@example.com', 
+    '9822004455', 
+    NULL, 
+    '21, Linking Road', 
+    'Bandra', 
+    'Mumbai', 
+    12000.75
+);
 
 

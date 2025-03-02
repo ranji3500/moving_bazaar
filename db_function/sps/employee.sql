@@ -260,3 +260,11 @@ DELIMITER ;
 
 
 call GetBillingByEmployeeId(13);
+
+
+CALL InsertEmployee('Ravi Kumar', 'ravi.kumar@example.com', '9876543210', 'hashed_password_1', 'Software Engineer', TRUE);
+CALL InsertEmployee('Priya Sharma', 'priya.sharma@example.com', '9812345678', 'hashed_pwd_2', NULL, TRUE);
+CALL InsertEmployee('Amit Verma', 'amit.verma@example.com', '7890654321', 'hash_pswd_3', 'Data Scientist', FALSE);
+CALL InsertEmployee('Neha Gupta', 'neha.gupta@example.com', NULL, 'hashed_pwd_4', 'HR Manager', TRUE);
+CALL InsertEmployee('Arjun Reddy', 'arjun.reddy@example.com', '9123456780', 'hashed_pswd_5', 'Product Manager', TRUE);
+

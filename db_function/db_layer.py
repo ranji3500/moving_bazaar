@@ -39,10 +39,11 @@ class AdvancedDatabase(MySQLDatabase):
 
     def call_procedure(self, procedure_name, params=None):
         """
-        Call a stored procedure.
+        Call a stored procedure and return structured results with keys.
+
         :param procedure_name: Name of the procedure.
         :param params: Parameters for the procedure (optional).
-        :return: Query result or affected rows.
+        :return: List of dictionaries (each row as a dict with column names as keys).
         """
         connection = self.get_connection()
         try:
@@ -56,12 +57,14 @@ class AdvancedDatabase(MySQLDatabase):
 
             print(f"Procedure '{procedure_name}' called successfully.")
 
-            # Fetch results from SELECT statements in the procedure
+            # Fetch results dynamically
             results = []
             for result in cursor.stored_results():
-                results.append(result.fetchall())
+                columns = [desc[0] for desc in result.description]  # Extract column names
+                for row in result.fetchall():
+                    results.append(dict(zip(columns, row)))  # Convert row to dictionary
 
-            return results  # Return the results
+            return results  # Return structured result
         except mysql.connector.Error as err:
             print(f"Error executing procedure '{procedure_name}': {err}")
             raise
@@ -71,10 +74,11 @@ class AdvancedDatabase(MySQLDatabase):
 
     def insert_using_procedure(self, procedure_name, params):
         """
-        Insert data using a stored procedure and return a message.
+        Insert data using a stored procedure and return the output dynamically as a dictionary.
+
         :param procedure_name: Name of the procedure.
         :param params: Parameters for the procedure.
-        :return: The output message from the stored procedure.
+        :return: Dictionary containing the output message from the stored procedure.
         """
         connection = self.get_connection()
         try:
@@ -83,13 +87,18 @@ class AdvancedDatabase(MySQLDatabase):
             # Call the procedure
             cursor.callproc(procedure_name, params)
 
-            # Fetch the output message
+            # Fetch the output dynamically
+            result_dict = {}
             for result in cursor.stored_results():
-                message = result.fetchone()[0]  # Assuming the procedure returns a single message
+                row = result.fetchone()  # Assuming a single row is returned
+                if row:
+                    columns = [desc[0] for desc in result.description]  # Extract column names dynamically
+                    result_dict = dict(zip(columns, row))  # Create dictionary dynamically
 
             connection.commit()
             print(f"Procedure '{procedure_name}' executed successfully.")
-            return message  # Return the message
+            return result_dict  # Return the result as a dictionary
+
         except mysql.connector.Error as err:
             print(f"Error executing procedure '{procedure_name}': {err}")
             raise

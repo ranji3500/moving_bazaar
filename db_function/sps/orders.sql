@@ -4,13 +4,21 @@ CREATE TABLE orders (
     sender_id INT NOT NULL,
     receiver_id INT NOT NULL,
     created_by INT NOT NULL,  -- Tracks the user who created the order
-    order_status ENUM('Pending', 'Processing', 'Completed', 'Cancelled') DEFAULT 'Pending',
+    order_status ENUM('Retained', 'In Transit', 'Picked Up', 'Delivered') DEFAULT  'In Transit',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_id) REFERENCES customer(customer_id),
     FOREIGN KEY (receiver_id) REFERENCES customer(customer_id),
     FOREIGN KEY (created_by) REFERENCES users(employeeid)  -- Links to user who created the order
 );
+
+
+ALTER TABLE orders 
+MODIFY order_status ENUM( 'Retained', 'In Transit', 'Picked Up', 'Delivered') DEFAULT 'In Transit';
+
+ALTER TABLE orders 
+ADD COLUMN stage ENUM('order', 'commodity', 'billing', 'Completed') DEFAULT 'order' AFTER order_status;
+
 
 
 CREATE TABLE order_items (
@@ -38,8 +46,6 @@ CREATE TABLE commodities_photos (
 
 
 
--- create order using sender id , reciver id ,  createdby
-
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS create_order$$
@@ -51,9 +57,17 @@ CREATE PROCEDURE create_order(
 )
 BEGIN
     DECLARE custom_order_id VARCHAR(8);
-    DECLARE error_message VARCHAR(255);
     DECLARE timestamp_part VARCHAR(4);
     DECLARE random_part VARCHAR(4);
+    DECLARE stage_value ENUM('Processing', 'Dispatched', 'Out for Delivery', 'Completed');
+
+    -- ✅ Set default stage value
+    SET stage_value = 'Processing';
+
+    -- ✅ Generate Custom Order ID before validations
+    SET timestamp_part = RIGHT(DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'), 4);
+    SET random_part = LPAD(FLOOR(RAND() * 10000), 4, '0');
+    SET custom_order_id = CONCAT(timestamp_part, random_part);
 
     -- ✅ Start a labeled block to use LEAVE properly
     proc_block: BEGIN 
@@ -64,42 +78,37 @@ BEGIN
         -- ✅ Check if sender exists
         IF NOT EXISTS (SELECT 1 FROM customer WHERE customer_id = sender_id_param) THEN
             ROLLBACK;
-            SELECT 'Failure' AS Status, 'Sender does not exist in customer table' AS Message;
+            SELECT 'Failure' AS Status, 'Sender does not exist in customer table' AS Message, custom_order_id AS OrderID, stage_value AS Stage;
             LEAVE proc_block;
         END IF;
 
         -- ✅ Check if receiver exists
         IF NOT EXISTS (SELECT 1 FROM customer WHERE customer_id = receiver_id_param) THEN
             ROLLBACK;
-            SELECT 'Failure' AS Status, 'Receiver does not exist in customer table' AS Message;
+            SELECT 'Failure' AS Status, 'Receiver does not exist in customer table' AS Message, custom_order_id AS OrderID, stage_value AS Stage;
             LEAVE proc_block;
         END IF;
 
-        -- ✅ Check if created_by user exists (assuming `users` table)
+        -- ✅ Check if created_by user exists
         IF NOT EXISTS (SELECT 1 FROM users WHERE employeeid = created_by_param) THEN
             ROLLBACK;
-            SELECT 'Failure' AS Status, 'Created_by user does not exist' AS Message;
+            SELECT 'Failure' AS Status, 'Created_by user does not exist' AS Message, custom_order_id AS OrderID, stage_value AS Stage;
             LEAVE proc_block;
         END IF;
 
-        -- ✅ Generate Custom Order ID
-        SET timestamp_part = RIGHT(DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'), 4);
-        SET random_part = LPAD(FLOOR(RAND() * 10000), 4, '0');
-        SET custom_order_id = CONCAT(timestamp_part, random_part);
-
         -- ✅ Insert the new order with the generated order ID
-        INSERT INTO orders (order_id, sender_id, receiver_id, created_by, order_status, created_at, updated_at)
-        VALUES (custom_order_id, sender_id_param, receiver_id_param, created_by_param, 'Pending', NOW(), NOW());
+        INSERT INTO orders (order_id, sender_id, receiver_id, stage, created_by, order_status, created_at, updated_at)
+        VALUES (custom_order_id, sender_id_param, receiver_id_param, stage_value, created_by_param, 'Pending', NOW(), NOW());
 
         -- ✅ If insertion failed, rollback
         IF ROW_COUNT() = 0 THEN
             ROLLBACK;
-            SELECT 'Failure' AS Status, 'Could not create Order' AS Message;
+            SELECT 'Failure' AS Status, 'Could not create Order' AS Message, custom_order_id AS OrderID, stage_value AS Stage;
             LEAVE proc_block;
         ELSE
-            -- ✅ Commit transaction and return success
+            -- ✅ Commit transaction and return success with order ID and stage
             COMMIT;
-            SELECT 'Success' AS Status, 'Order Created Successfully' AS Message, custom_order_id AS OrderID;
+            SELECT 'Success' AS Status, 'Order Created Successfully' AS Message, custom_order_id AS OrderID, stage_value AS Stage;
         END IF;
 
     END proc_block;  -- ✅ End of labeled block
@@ -107,6 +116,7 @@ BEGIN
 END$$
 
 DELIMITER ;
+
 
 
 DELIMITER $$
@@ -712,5 +722,18 @@ END $$
 
 DELIMITER ;
 
-CALL GetOrdersByEmployeeId(13);
+CALL GetOrdersByEmployeeId(10);
+
+
+CALL create_order(12, 13, 10);10
+CALL create_order(13, 14, 13);
+CALL create_order(14, 15, 14);
+CALL create_order(15, 12, 16);
+
+
+CALL add_order_items(59491924, '[{"commodity_id": 17, "quantity": 3, "price": 120.00}, {"commodity_id": 18, "quantity": 2, "price": 60.00}]');
+CALL add_order_items(56224403, '[{"commodity_id": 17, "quantity": 3, "price": 120.00}, {"commodity_id": 18, "quantity": 2, "price": 60.00}]');
+CALL add_order_items(564403, '[{"commodity_id": 22, "quantity": 5, "price": 50.00}, {"commodity_id": 24, "quantity": 2, "price": 250.00}]');
+
+
 
