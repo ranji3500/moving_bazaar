@@ -19,7 +19,7 @@ app.register_blueprint(orders_bp, url_prefix='/orders')
 app.register_blueprint(billing_bp, url_prefix='/billing')
 
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 @app.route('/', methods=['GET'])
 def index():
     return "backend server is running"

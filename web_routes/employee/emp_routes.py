@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from db_function import db
 from web_routes.employee import employee_bp
 from flask_jwt_extended import create_access_token
@@ -70,30 +70,47 @@ def login_employee():
 
         # Call stored procedure
         result = db.call_procedure(procedure_name, params)
+        print("RESULT:", result)
 
-        if result and len(result[0]) > 0:
-            response_tuple = result[0][0]  # Extract first tuple from result
+        # Ensure result is not empty and is a list
+        if not result or not isinstance(result, list) or len(result) == 0:
+            return jsonify({"message": "Invalid login credentials"}), 401
 
-            # Extracting values from tuple
-            result_status = response_tuple[0]  # 1 for success, 0 for failure
-            employee_id = response_tuple[1]  # Employee ID
-            email = response_tuple[2]  # Employee Email
-            message = response_tuple[3]  # Login Message
+        response_dict = result[0]
 
-            if result_status == 1:
-                # Generate JWT token for session management
-                access_token = create_access_token(identity=employee_id, expires_delta=timedelta(hours=2))
+        # Extracting values
+        result_status = response_dict["result_status"]
+        employee_id = response_dict["employee_id"]
+        email = response_dict["email"]
+        message = response_dict["message"]
 
-                return jsonify({
-                    "message": message,
-                    "token": access_token,
-                    "employee": {
-                        "employee_id": employee_id,
-                        "email": email
-                    }
-                }), 200
-            else:
-                return jsonify({"message": message}), 401
+        if result_status == 1:
+            # Generate JWT token
+            access_token = create_access_token(identity=employee_id, expires_delta=timedelta(hours=2))
+
+            # Create response object
+            response = make_response(jsonify({
+                "isCredentialsValid": True,
+                "message": message,
+                "employee": {
+                    "employeeId": employee_id,
+                    "email": email
+                }
+            }), 200)
+
+            # Set token as HTTP-Only cookie
+            response.set_cookie(
+                "jwt",
+                access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7200
+            )
+
+            return response
+        else:
+            return jsonify({"message": message}), 401
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
