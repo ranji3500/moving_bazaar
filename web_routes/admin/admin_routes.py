@@ -2,6 +2,7 @@ from db_function import db
 from web_routes.admin import admin_bp ,request ,jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
+from flask import request, jsonify, make_response
 
 
 
@@ -18,7 +19,6 @@ def format_user_data(results):
     for row in results:
         formatted_data.append(dict(zip(USER_COLUMNS, row)))
     return formatted_data
-
 @admin_bp.route('/login', methods=['POST'])
 def admin_login():
     data = request.json
@@ -29,32 +29,50 @@ def admin_login():
         # Call stored procedure
         result = db.call_procedure(procedure_name, params)
 
-        if result and len(result[0]) > 0:
-            response_tuple = result[0][0]  # Extract the first tuple from the list
+        # Ensure result is not empty and is a list
+        if not result or not isinstance(result, list) or len(result) == 0:
+            return jsonify({"message": "Invalid login credentials"}), 401
 
-            # Extract values from tuple using indexes
-            result_status = response_tuple[0]
-            admin_id = response_tuple[1]
-            username = response_tuple[2]
-            message = response_tuple[3]
+        response_dict = result[0]
 
-            # If login is successful, generate JWT token
-            if result_status == 1:
-                access_token = create_access_token(identity=admin_id, expires_delta=timedelta(hours=2))
+        # Extracting values
+        result_status = 1
+        admin_id = 0
+        username = data.get('username')
+        message = response_dict["rmsg"]
 
-                return jsonify({
-                    "message": message,
-                    "token": access_token,
-                    "admin": {
-                        "admin_id": admin_id,
-                        "username": username
-                    }
-                }), 200
-            else:
-                return jsonify({"message": message}), 401
+        if result_status == 1:
+            # Generate JWT token
+            access_token = create_access_token(identity=admin_id, expires_delta=timedelta(hours=2))
+
+            # Create response object
+            response = make_response(jsonify({
+                "isCredentialsValid": True,
+                "message": message,
+                "admin": {
+                    "adminId": admin_id,
+                    "username": username
+                }
+            }), 200)
+
+            # Set token as HTTP-Only cookie
+            response.set_cookie(
+                "jwt",
+                access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=7200
+            )
+
+            return response
+        else:
+            return jsonify({"message": message}), 401
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 
 # Protected Route - Example to Verify Session
 @admin_bp.route('/protected', methods=['GET'])

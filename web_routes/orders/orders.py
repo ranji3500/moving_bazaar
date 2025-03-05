@@ -60,7 +60,6 @@ def get_order_details(order_id):
 
         return jsonify(results), 200
 
-
     except mysql.connector.Error as err:
         return jsonify({"Status": "Failure", "Message": str(err)}), 500
     except Exception as e:

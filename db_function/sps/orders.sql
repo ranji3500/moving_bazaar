@@ -725,7 +725,7 @@ DELIMITER ;
 CALL GetOrdersByEmployeeId(10);
 
 
-CALL create_order(12, 13, 10);10
+CALL create_order(12, 13, 10);
 CALL create_order(13, 14, 13);
 CALL create_order(14, 15, 14);
 CALL create_order(15, 12, 16);
