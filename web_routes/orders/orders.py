@@ -105,37 +105,40 @@ def get_order_commodities(order_id):
 
 
 # ✅ API: Get Orders
-@orders_bp.route('/getordersbyuser/<int:userid>', methods=['GET'])
-def get_order_byuser(userid):
+@orders_bp.route('/getuserstatuswiseorders', methods=['POST'])
+def get_order_byuser():
     try:
+        data = request.json
+        userid = data.get("userid")
+        status = data.get("status")
 
-        params = (userid,)
-        results = db.call_procedure("getOrdersByUser", params)
+        if not userid or not status:
+            return jsonify({"status": "error", "message": "userid and status are required"}), 400
 
-        commodities = []
-        for result in results:
-            commodities.extend(result.fetchall())
+        params = (userid, status)
+        results = db.call_procedure("getUserOrdersByStatus", params)
 
-        return jsonify({"status": "success", "commodities": commodities}), 200
+
+        return jsonify({"status": "success", "orders": results}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ✅ API: Get Orders
-@orders_bp.route('/getuserordersbystatus/<int:userid>', methods=['GET'])
-def getuserordersbystatus(userid):
-    try:
-
-        params = (userid,)
-        results = db.call_procedure("getUserOrdersByStatus", params)
-
-        commodities = []
-        for result in results:
-            commodities.extend(result.fetchall())
-
-        return jsonify({"status": "success", "commodities": commodities}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+# @orders_bp.route('/getuserordersbystatus/<int:userid>', methods=['GET'])
+# def getuserordersbystatus(userid):
+#     try:
+#
+#         params = (userid,)
+#         results = db.call_procedure("getUserOrdersByStatus", params)
+#
+#         commodities = []
+#         for result in results:
+#             commodities.extend(result.fetchall())
+#
+#         return jsonify({"status": "success", "commodities": commodities}), 200
+#     except Exception as e:
+#         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @orders_bp.route('by-employee/<int:employee_id>', methods=['GET'])
