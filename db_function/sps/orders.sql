@@ -735,5 +735,33 @@ CALL add_order_items(59491924, '[{"commodity_id": 17, "quantity": 3, "price": 12
 CALL add_order_items(56224403, '[{"commodity_id": 17, "quantity": 3, "price": 120.00}, {"commodity_id": 18, "quantity": 2, "price": 60.00}]');
 CALL add_order_items(564403, '[{"commodity_id": 22, "quantity": 5, "price": 50.00}, {"commodity_id": 24, "quantity": 2, "price": 250.00}]');
 
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS delete_order_commodity$$
+
+CREATE PROCEDURE delete_order_commodity(
+    IN p_order_id INT,
+    IN p_commodity_id INT
+)
+BEGIN
+    DECLARE rows_affected INT;
+
+    -- Delete the commodity from the order
+    DELETE FROM order_items 
+    WHERE order_id = p_order_id AND commodity_id = p_commodity_id;
+
+    -- Get number of affected rows
+    SET rows_affected = ROW_COUNT();
+
+    -- Return success message and IDs
+    IF rows_affected > 0 THEN
+        SELECT 'Success' AS status, p_order_id AS order_id, p_commodity_id AS commodity_id;
+    ELSE
+        SELECT 'No matching record found' AS status, NULL AS order_id, NULL AS commodity_id;
+    END IF;
+END $$
+
+DELIMITER ;
 
 
+CALL delete_order_commodity(1068025, 17);

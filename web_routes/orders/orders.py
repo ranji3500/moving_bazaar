@@ -48,6 +48,36 @@ def insert_order_items():
         return jsonify({"message": result}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@orders_bp.route('/delete-order-commodity', methods=['POST'])
+def delete_order_commodity():
+    """
+    API to delete a specific commodity from an order using the stored procedure 'delete_order_commodity'.
+
+    Expected JSON:
+    {
+        "order_id": 1068025,
+        "commodity_id": 17
+    }
+    """
+    data = request.json
+    try:
+        procedure_name = "delete_order_commodity"
+        order_id = data["order_id"]
+        commodity_id = data["commodity_id"]
+
+        params = (order_id, commodity_id)  # Procedure expects (order_id, commodity_id)
+
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        return jsonify({"message": result}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 # ✅ Get Order Details
 @orders_bp.route('/orders/details/<int:order_id>', methods=['GET'])
 def get_order_details(order_id):
@@ -66,7 +96,7 @@ def get_order_details(order_id):
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
 
 # ✅ Edit an Order
-@orders_bp.route('/edit', methods=['PUT'])
+@orders_bp.route('/editorder', methods=['PUT'])
 def edit_order():
     data = request.json
     try:
@@ -78,28 +108,27 @@ def edit_order():
         return jsonify({"error": str(e)}), 500
 
 # ✅ Delete an Order
-@orders_bp.route('/delete/<int:order_id>', methods=['DELETE'])
+@orders_bp.route('/deleteorder/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
     try:
         procedure_name = "delete_order"
         params = (order_id,)
-        db.insert_using_procedure(procedure_name, params)
-        return jsonify({"message": "Order Deleted Successfully"}), 200
+        result = db.insert_using_procedure(procedure_name, params)
+        if result:
+            return jsonify({"message": result["Message"],"status":result["Status"]}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 # ✅ API: Get Order Commodities
 @orders_bp.route('/get_order_commodities/<int:order_id>', methods=['GET'])
 def get_order_commodities(order_id):
     try:
 
         params = (order_id,)
-        results = db.insert_using_procedure("get_order_commodities", params)
+        results = db.call_procedure("get_order_commodities", params)
 
-        commodities = []
-        for result in results:
-            commodities.extend(result.fetchall())
-
-        return jsonify({"status": "success", "commodities": commodities}), 200
+        return jsonify({"status": "success", "commodities": results}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -122,23 +151,6 @@ def get_order_byuser():
         return jsonify({"status": "success", "orders": results}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-
-# ✅ API: Get Orders
-# @orders_bp.route('/getuserordersbystatus/<int:userid>', methods=['GET'])
-# def getuserordersbystatus(userid):
-#     try:
-#
-#         params = (userid,)
-#         results = db.call_procedure("getUserOrdersByStatus", params)
-#
-#         commodities = []
-#         for result in results:
-#             commodities.extend(result.fetchall())
-#
-#         return jsonify({"status": "success", "commodities": commodities}), 200
-#     except Exception as e:
-#         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @orders_bp.route('by-employee/<int:employee_id>', methods=['GET'])
