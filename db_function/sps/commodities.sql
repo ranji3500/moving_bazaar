@@ -13,12 +13,17 @@ ALTER TABLE commodity
 ADD CONSTRAINT unique_commodity 
 UNIQUE (item_name);
 
+ALTER TABLE commodity 
+ADD COLUMN description TEXT COMMENT 'Detailed description of the commodity' AFTER item_photo;
+
+
 
 DELIMITER $$
 
 CREATE PROCEDURE insert_commodity(
     IN p_item_name VARCHAR(255),
     IN p_item_photo VARCHAR(255),
+    IN p_description TEXT,
     IN p_min_order_qty INT,
     IN p_max_order_qty INT,
     IN p_price DECIMAL(10,2)
@@ -37,15 +42,16 @@ BEGIN
     IF EXISTS (SELECT 1 FROM commodity WHERE item_name = p_item_name) THEN
         SELECT 'Error: Commodity already exists with the same name.' AS message;
     ELSE
-        -- Insert New Commodity
-        INSERT INTO commodity (item_name, item_photo, min_order_qty, max_order_qty, price)
-        VALUES (p_item_name, p_item_photo, p_min_order_qty, p_max_order_qty, p_price);
+        -- Insert New Commodity with description
+        INSERT INTO commodity (item_name, item_photo, description, min_order_qty, max_order_qty, price)
+        VALUES (p_item_name, p_item_photo, p_description, p_min_order_qty, p_max_order_qty, p_price);
 
         SELECT 'Commodity inserted successfully.' AS message;
     END IF;
 END$$
 
 DELIMITER ;
+
 
 
 DELIMITER $$
@@ -161,7 +167,8 @@ END$$
 
 DELIMITER ;
 
-CALL insert_commodity(' Vege', 'veg_image.jpg', 1, 10, 35.50);
+CALL insert_commodity('Vegetables', 'veg_image.jpg', 'Fresh vegetables from local farms', 1, 10, 35.50);
+
 
 CALL update_commodity(7, 'Fresh', 'fruits.jpg', 2, 15, 40.00);
 

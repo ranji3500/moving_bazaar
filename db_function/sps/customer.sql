@@ -187,7 +187,7 @@ CALL update_customer(
     'Los Angeles',
     150.50
 );
-
+  
 
 CALL delete_customer(2); 
 
@@ -273,3 +273,5 @@ CALL insert_customer(
 );
 
 
+
+select * from customer;

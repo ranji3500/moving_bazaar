@@ -60,60 +60,57 @@ def delete_employee(emp_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# LOGIN Employee
+
 @employee_bp.route('/login_employee', methods=['POST'])
 def login_employee():
-    data = request.json
     try:
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"message": "Email and password are required"}), 400
+
         procedure_name = "LoginEmployee"
-        params = (data.get('email'), data.get('password'))
-
-        # Call stored procedure
+        params = (email, password)
         result = db.call_procedure(procedure_name, params)
-        print("RESULT:", result)
 
-        # Ensure result is not empty and is a list
-        if not result or not isinstance(result, list) or len(result) == 0:
+        if not result:
             return jsonify({"message": "Invalid login credentials"}), 401
 
         response_dict = result[0]
 
-        # Extracting values
-        result_status = response_dict["result_status"]
-        employee_id = response_dict["employee_id"]
-        email = response_dict["email"]
-        message = response_dict["message"]
-
-        if result_status == 1:
-            # Generate JWT token
-            access_token = create_access_token(identity=employee_id, expires_delta=timedelta(hours=2))
-
-            # Create response object
-            response = make_response(jsonify({
-                "isCredentialsValid": True,
-                "message": message,
-                "employee": {
-                    "employeeId": employee_id,
-                    "email": email
-                }
-            }), 200)
-
-            # Set token as HTTP-Only cookie
-            response.set_cookie(
-                "jwt",
-                access_token,
-                httponly=True,
-                secure=True,
-                samesite='Lax',
-                max_age=7200
+        if response_dict.get("result_status") == 1:
+            # ✅ Generate JWT Token
+            access_token = create_access_token(
+                identity=str(response_dict["employee_id"]),  # Store only `employee_id` as identity
+                additional_claims={  # Store extra details
+                    "userName": response_dict["userName"],
+                    "email": response_dict["email"],
+                    "user_type": "USER"
+                },
+                expires_delta=timedelta(hours=2)
             )
 
-            return response
+            # ✅ Return the JWT token in the response JSON
+            return jsonify({
+                "isCredentialsValid": True,
+                "message": "Login successful",
+                "access_token": access_token,  # JWT Token here
+                "user": {
+                    "userId": response_dict["employee_id"],
+                    "userName": response_dict["userName"],
+                    "email": response_dict["email"],
+                    "userType": "USER"
+                }
+            }), 200
+
         else:
-            return jsonify({"message": message}), 401
+            return jsonify({"message": response_dict.get("message", "Login failed")}), 401
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 # FORGOT PASSWORD
 @employee_bp.route('/forgot_password', methods=['POST'])
 def forgot_password():

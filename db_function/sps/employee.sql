@@ -227,7 +227,7 @@ END$$
 
 DELIMITER ;
 
-
+use moving_bazaar;
 
 CALL LoginEmployee('ranji@example.com', 'hashed_password');
 

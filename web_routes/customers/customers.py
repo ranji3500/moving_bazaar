@@ -4,6 +4,7 @@ from  . import customers_bp
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 
+
 # CREATE Customer
 @customers_bp.route('/create_customer', methods=['POST'])
 def create_customer():
@@ -11,19 +12,21 @@ def create_customer():
     try:
         procedure_name = "insert_customer"
         params = (
-            data.get('store_name'),
-            data.get('email'),
-            data.get('phone_number'),
-            data.get('whatsapp_number', None),
-            data.get('address_line1'),
-            data.get('address_line2', None),
-            data.get('city'),
-            data.get('outstanding_price', 0.00)
+            data.get('storeName'),  # ✅ store_name -> storeName
+            data.get('email'),  # ✅ email (already in camelCase)
+            data.get('phoneNumber'),  # ✅ phone_number -> phoneNumber
+            data.get('whatsappNumber', None),  # ✅ whatsapp_number -> whatsappNumber
+            data.get('addressLine1'),  # ✅ address_line1 -> addressLine1
+            data.get('addressLine2', None),  # ✅ address_line2 -> addressLine2
+            data.get('city'),  # ✅ city (already in camelCase)
+            data.get('outstandingPrice', 0.00)  # ✅ outstanding_price -> outstandingPrice
         )
+
         rows_affected = db.insert_using_procedure(procedure_name, params)
         return jsonify({"message": rows_affected}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # UPDATE Customer
 @customers_bp.route('/update_customer/<int:customer_id>', methods=['PUT'])
@@ -75,21 +78,10 @@ def get_customer_by_phone():
         # Call stored procedure
         result = db.call_procedure(procedure_name, params)
 
-        if result and len(result[0]) > 0:
-            customer_data = result[0][0]
+        if result and len(result) > 0:
+            customer_data = result
 
-            return jsonify({
-                "customer_id": customer_data[0],
-                "store_name": customer_data[1],
-                "email": customer_data[2],
-                "phone_number": customer_data[3],
-                "whatsapp_number": customer_data[4],
-                "address_line1": customer_data[5],
-                "address_line2": customer_data[6],
-                "city": customer_data[7],
-                "outstanding_price": float(customer_data[8]),
-                "created_at": customer_data[9]
-            }), 200
+            return jsonify(customer_data), 200
         else:
             return jsonify({"message": "Customer not found"}), 404
 

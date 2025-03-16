@@ -7,12 +7,12 @@ import json
 
 
 # ✅ Create a new order
-@orders_bp.route('/create', methods=['POST'])
+@orders_bp.route('/create_order', methods=['POST'])
 def create_order():
     data = request.json
     try:
         procedure_name = "create_order"
-        params = (data['sender_id'], data['receiver_id'], data['created_by'])
+        params = (data['senderId'], data['receiverId'], data['createdBy'])
         result = db.insert_using_procedure(procedure_name, params)
 
         return jsonify({"message":  result}), 201
@@ -45,7 +45,7 @@ def insert_order_items():
         # Execute stored procedure
         result = db.insert_using_procedure(procedure_name, params)
 
-        return jsonify({"message": result}), 201
+        return jsonify(result), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
