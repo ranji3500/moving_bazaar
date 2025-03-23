@@ -6,8 +6,8 @@ from web_routes.customers import customers_bp
 from web_routes.billing import billing_bp
 from web_routes.orders import orders_bp
 
-from flask_cors import CORS
 
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
 
 app = Flask(__name__)

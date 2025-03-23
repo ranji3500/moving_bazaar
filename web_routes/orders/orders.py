@@ -171,3 +171,38 @@ def get_orders_by_employee(employee_id):
         return jsonify({"Status": "Success", "Orders": result}), 200
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
+
+
+@orders_bp.route('/order-detailsbystage', methods=['GET'])
+def get_order_details_bystage():
+    """
+    API to fetch order details by order ID and stage using the stored procedure 'GetOrderDetailsbyStagewise'.
+
+    Query Parameters:
+    - order_id: The ID of the order (Required)
+    - stage: The stage of the order ('order' or 'commodity') (Required)
+
+    URL Example:
+    GET /orders/order-detailsbystage?order_id=58430656&stage=order
+    GET /orders/order-detailsbystage?order_id=58430656&stage=commodity
+    """
+    try:
+        # Extract query parameters
+        order_id = request.args.get('order_id')
+        stage = request.args.get('stage')
+
+        # Validate required parameters
+        if not order_id or not stage:
+            return jsonify({"Status": "Failure", "Message": "Missing required parameters"}), 400
+
+        procedure_name = "GetOrderDetailsbyStagewise"
+        params = (order_id, stage)
+
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        return jsonify({"Status": "Success", "Details": result}), 200
+    except Exception as e:
+        return jsonify({"Status": "Failure", "Message": str(e)}), 500
+
+
