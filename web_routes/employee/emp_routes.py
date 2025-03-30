@@ -125,3 +125,5 @@ def forgot_password():
             return jsonify({"message": "Email not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+

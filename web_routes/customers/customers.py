@@ -111,3 +111,13 @@ def get_orders_by_employee(employee_id):
 
 
 
+# API to Get Orders by Employee ID
+@customers_bp.route('/getcustomeroutstanding/<customerid>', methods=['GET'])
+def get_customer_outstanding(customerid):
+    try:
+        params =(customerid,)
+        orders = db.call_procedure("GetCustomerBalance",params)
+        return jsonify(orders)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
