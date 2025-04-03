@@ -27,7 +27,6 @@ def create_customer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # UPDATE Customer
 @customers_bp.route('/update_customer/<int:customer_id>', methods=['PUT'])
 def update_customer(customer_id):
@@ -98,7 +97,6 @@ def get_customers():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # API to Get Orders by Employee ID
 @customers_bp.route('/orders/employee/<int:employee_id>', methods=['GET'])
 def get_orders_by_employee(employee_id):
@@ -108,8 +106,6 @@ def get_orders_by_employee(employee_id):
         return jsonify({"orders": orders})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 # API to Get Orders by Employee ID
 @customers_bp.route('/getcustomeroutstanding/<customerid>', methods=['GET'])
@@ -121,3 +117,47 @@ def get_customer_outstanding(customerid):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# INSERT Outstanding Balance
+@customers_bp.route('/insert_outstanding_balance', methods=['POST'])
+def insert_outstanding_balance():
+    data = request.json
+    try:
+        # Extract data from request
+        customer_id = data.get('customer_id')
+        order_id = data.get('order_id')
+        outstanding_amount = float(data.get('outstanding_amount', 0.00))  # Ensure it's a float
+
+        # Validate input
+        if not customer_id or not order_id or outstanding_amount <= 0:
+            return jsonify({"error": "Invalid input. Ensure customer_id, order_id, and a positive outstanding_amount."}), 400
+
+        # Call stored procedure
+        procedure_name = "InsertOutstandingBalance"
+        params = (customer_id, order_id, outstanding_amount)
+        result = db.insert_using_procedure(procedure_name, params)  # Assuming db has this method
+
+        return jsonify(result), 200
+
+    except ValueError:
+        return jsonify({"error": "Invalid data format. Please check your input."}), 400
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+# GET Outstanding Balance by Customer ID using Stored Procedure
+@customers_bp.route('/get_outstanding_balance/<int:customer_id>', methods=['GET'])
+def get_outstanding_balance(customer_id):
+    try:
+        # Call the stored procedure
+        procedure_name = "GetOutstandingBalanceByCustomer"
+        params = (customer_id,)
+        result = db.call_procedure(procedure_name, params)  # Assuming this method executes SP and returns data
+
+        # If the stored procedure returns a message (no balance found)
+        if isinstance(result, list) and len(result) == 1 and 'message' in result[0]:
+            return jsonify({result[0]['message']}), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

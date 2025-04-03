@@ -206,3 +206,31 @@ def get_order_details_bystage():
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
 
 
+@orders_bp.route('/getordersummary', methods=['POST'])
+def get_order_summary():
+    """
+    API to fetch order details by order ID using the stored procedure 'GetOrderSummary'.
+
+    Request Body (JSON):
+    {
+        "order_id": 58430656
+    }
+    """
+    try:
+        # Try to parse JSON, even if headers are missing
+        data = request.get_json()
+
+        # Validate required parameter
+        if not data or "order_id" not in data:
+            return jsonify({"Status": "Failure", "Message": "Missing or invalid JSON data. Ensure Content-Type is application/json"}), 400
+
+        order_id = data["order_id"]
+
+        procedure_name = "GetOrderSummary"
+        params = (order_id,)
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        return jsonify({"Status": "Success", "Details": result}), 200
+    except Exception as e:
+        return jsonify({"Status": "Failure", "Message": str(e)}), 500
