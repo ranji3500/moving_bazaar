@@ -231,6 +231,6 @@ def get_order_summary():
         # Execute stored procedure
         result = db.call_procedure(procedure_name, params)
 
-        return jsonify({"Status": "Success", "Details": result}), 200
+        return jsonify( result[0]), 200
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500

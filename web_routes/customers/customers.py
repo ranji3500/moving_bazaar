@@ -26,7 +26,6 @@ def create_customer():
         return jsonify({"message": rows_affected}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 # UPDATE Customer
 @customers_bp.route('/update_customer/<int:customer_id>', methods=['PUT'])
 def update_customer(customer_id):
@@ -143,7 +142,6 @@ def insert_outstanding_balance():
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
-
 # GET Outstanding Balance by Customer ID using Stored Procedure
 @customers_bp.route('/get_outstanding_balance/<int:customer_id>', methods=['GET'])
 def get_outstanding_balance(customer_id):
@@ -161,3 +159,4 @@ def get_outstanding_balance(customer_id):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
