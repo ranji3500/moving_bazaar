@@ -75,13 +75,18 @@ def get_customer_by_phone():
 
         # Call stored procedure
         result = db.call_procedure(procedure_name, params)
-
         if result and len(result) > 0:
             customer_data = result
 
-            return jsonify(customer_data), 200
+            return jsonify({
+                "message": "Customers has been fetched successfully",
+                "data": customer_data
+            }), 200
         else:
-            return jsonify({"message": "Customer not found"}), 404
+            return jsonify({
+                "data": None,
+                "message": "Customer not found"
+            }), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

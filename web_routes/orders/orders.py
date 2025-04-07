@@ -15,7 +15,13 @@ def create_order():
         params = (data['senderId'], data['receiverId'], data['createdBy'])
         result = db.insert_using_procedure(procedure_name, params)
 
-        return jsonify({"message":  result}), 201
+        return jsonify({
+            "data": {
+                "orderId": result['orderId'],
+                "orderStage": result['orderStage']
+            },
+            "message": result['message']
+        }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

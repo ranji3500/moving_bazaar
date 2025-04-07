@@ -12,11 +12,7 @@ from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jw
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'
-app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-app.config["JWT_COOKIE_SECURE"] = True  # Set to False for local testing
-app.config["JWT_COOKIE_SAMESITE"] = "Lax"
-app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-app.config["JWT_ACCESS_COOKIE_NAME"] = "jwt"  # Ensure the correct cookie name
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
 
 jwt = JWTManager(app)
@@ -34,7 +30,7 @@ def index():
     return "backend server is running"
 
 @app.route('/verify_token', methods=['GET'])
-@jwt_required(locations=["headers"])  # ✅ Ensure JWT is read from headers
+@jwt_required()  # ✅ This validates the token
 def verify_token():
     try:
         user_id = get_jwt_identity()  # ✅ Retrieves `employee_id`
@@ -42,8 +38,7 @@ def verify_token():
 
         return jsonify({
             "message": "Token is valid",
-            "isCredentialsvalid":True,
-            "user": {
+            "data": {
                 "userId": int(user_id),
                 "userName": claims.get("userName"),
                 "email": claims.get("email"),
@@ -57,7 +52,7 @@ def verify_token():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5008, threaded=False,debug =True)
+    app.run(host='localhost', port=5008, threaded=False,debug =True)
 
 
 

@@ -76,15 +76,18 @@ def login_employee():
         result = db.call_procedure(procedure_name, params)
 
         if not result:
-            return jsonify({"message": "Invalid login credentials"}), 401
+            return jsonify({
+                "data": None,
+                "message": "Invalid login credentials"
+            }), 401
 
         response_dict = result[0]
 
         if response_dict.get("result_status") == 1:
             # ✅ Generate JWT Token
             access_token = create_access_token(
-                identity=str(response_dict["employee_id"]),  # Store only `employee_id` as identity
-                additional_claims={  # Store extra details
+                identity=str(response_dict["employee_id"]),
+                additional_claims={
                     "userName": response_dict["userName"],
                     "email": response_dict["email"],
                     "user_type": "USER"
@@ -92,21 +95,22 @@ def login_employee():
                 expires_delta=timedelta(hours=2)
             )
 
-            # ✅ Return the JWT token in the response JSON
             return jsonify({
-                "isCredentialsValid": True,
                 "message": "Login successful",
-                "access_token": access_token,  # JWT Token here
-                "user": {
+                "data": {
                     "userId": response_dict["employee_id"],
                     "userName": response_dict["userName"],
                     "email": response_dict["email"],
-                    "userType": "USER"
+                    "userType": "USER",
+                    "accessToken": access_token
                 }
             }), 200
 
         else:
-            return jsonify({"message": response_dict.get("message", "Login failed")}), 401
+            return jsonify({
+                "data": None,
+                "message": response_dict.get("message", "Login failed")
+            }), 401
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
