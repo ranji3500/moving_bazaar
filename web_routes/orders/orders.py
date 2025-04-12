@@ -19,7 +19,6 @@ def create_order():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @orders_bp.route('/insert-order-items', methods=['POST'])
 def insert_order_items():
     """
@@ -49,7 +48,6 @@ def insert_order_items():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @orders_bp.route('/delete-order-commodity', methods=['POST'])
 def delete_order_commodity():
     """
@@ -75,8 +73,6 @@ def delete_order_commodity():
         return jsonify({"message": result}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 # ✅ Get Order Details
 @orders_bp.route('/orders/details/<int:order_id>', methods=['GET'])
@@ -118,8 +114,6 @@ def delete_order(order_id):
             return jsonify({"message": result["Message"],"status":result["Status"]}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 # ✅ API: Get Order Commodities
 @orders_bp.route('/get_order_commodities/<int:order_id>', methods=['GET'])
 def get_order_commodities(order_id):
@@ -131,7 +125,6 @@ def get_order_commodities(order_id):
         return jsonify({"status": "success", "commodities": results}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 # ✅ API: Get Orders
 @orders_bp.route('/getuserstatuswiseorders', methods=['POST'])
@@ -152,7 +145,6 @@ def get_order_byuser():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
 @orders_bp.route('by-employee/<int:employee_id>', methods=['GET'])
 def get_orders_by_employee(employee_id):
     """
@@ -172,39 +164,53 @@ def get_orders_by_employee(employee_id):
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
 
-
 @orders_bp.route('/order-detailsbystage', methods=['GET'])
 def get_order_details_bystage():
-    """
-    API to fetch order details by order ID and stage using the stored procedure 'GetOrderDetailsbyStagewise'.
-
-    Query Parameters:
-    - order_id: The ID of the order (Required)
-    - stage: The stage of the order ('order' or 'commodity') (Required)
-
-    URL Example:
-    GET /orders/order-detailsbystage?order_id=58430656&stage=order
-    GET /orders/order-detailsbystage?order_id=58430656&stage=commodity
-    """
     try:
-        # Extract query parameters
         order_id = request.args.get('order_id')
         stage = request.args.get('stage')
 
-        # Validate required parameters
         if not order_id or not stage:
             return jsonify({"Status": "Failure", "Message": "Missing required parameters"}), 400
 
-        procedure_name = "GetOrderDetailsbyStagewise"
-        params = (order_id, stage)
+        try:
+            order_id = int(order_id)
+        except ValueError:
+            return jsonify({"Status": "Failure", "Message": "Invalid order_id"}), 400
 
-        # Execute stored procedure
-        result = db.call_procedure(procedure_name, params)
+        if stage == "billing":
+            procedure_name = "GetOrderSummary"
+            params = (order_id,)
+        else:
+            procedure_name = "GetOrderDetailsbyStagewise"
+            params = (order_id, stage)
 
-        return jsonify({"Status": "Success", "Details": result}), 200
+        results = db.call_procedure(procedure_name, params)
+
+        if not results:
+            return jsonify({"Status": "Failure", "Message": "No data found"}), 404
+
+        result = results[0]
+
+        if stage == "billing":
+            try:
+                result['commodities'] = json.loads(result.get('commodities', '[]'))
+            except Exception:
+                result['commodities'] = []
+        elif stage == "order":
+            result['sender'] = json.loads(result.get('sender', '{}'))
+            result['receiver'] = json.loads(result.get('receiver', '{}'))
+        elif stage == "commodity":
+            try:
+                result['commodities'] = json.loads(result.get('commodities', '[]'))
+            except Exception:
+                result['commodities'] = []
+
+        return jsonify(result), 200
+
     except Exception as e:
+        # Optionally: log the error here
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
-
 
 @orders_bp.route('/getordersummary', methods=['POST'])
 def get_order_summary():
@@ -234,3 +240,29 @@ def get_order_summary():
         return jsonify( result[0]), 200
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
+
+@orders_bp.route('/insertbillingdetails', methods=['POST'])
+def insert_billing_details():
+    data = request.json
+    try:
+        procedure_name = "InsertBillingDetails"
+        params = (
+            data['order_id'],          # p_order_id
+            data['user_id'],           # p_user_id
+            data['paid_by'],           # p_paid_by (customer_id)
+            data['total_price'],       # p_total_price
+            data['payment_status'],    # p_payment_status
+            data['created_at'],        # p_created_at
+            data['receipt_pdf'],       # p_receipt_pdf
+            data['amount_paid'],       # p_amount_paid
+            data['delivery_date']      # p_delivery_date
+        )
+
+        # Execute the procedure and get the response from the stored procedure
+        message = db.insert_using_procedure(procedure_name, params)
+
+        # Return the message returned by the stored procedure
+        return jsonify(message), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
