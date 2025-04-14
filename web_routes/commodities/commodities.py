@@ -94,11 +94,16 @@ def get_commodities():
         procedure_name = "getCommoditiesList"
         result = db.call_procedure(procedure_name)
 
-        if result :
+        if result:
+            return jsonify({
+                "data": result,
+                "message": "Commodity details has been fetched successfully"
+            }), 200
 
-            return jsonify(result), 200
-
-        return jsonify({"message": "No commodities found"}), 404
+        return jsonify({
+            "data": None,
+            "message": "No commodities found"
+        }), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

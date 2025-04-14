@@ -51,7 +51,14 @@ def insert_order_items():
         # Execute stored procedure
         result = db.insert_using_procedure(procedure_name, params)
 
-        return jsonify(result), 201
+        return jsonify({
+            "data": {
+                "orderId": result["orderId"],
+                "orderItemIds": result["orderItemIds"],
+                "totalPrice": result["totalPrice"],
+            },
+            "message": result["message"]
+        }), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -205,9 +212,25 @@ def get_order_details_bystage():
         params = (order_id, stage)
 
         # Execute stored procedure
-        result = db.call_procedure(procedure_name, params)
+        results = db.call_procedure(procedure_name, params)
 
-        return jsonify({"Status": "Success", "Details": result}), 200
+        # Get the first result set
+        if results and len(results) > 0:
+            result = results[0]
+
+            if stage == "order":
+                # Parse JSON fields
+                result['sender'] = json.loads(result['sender'])
+                result['receiver'] = json.loads(result['receiver'])
+
+            elif stage == "commodity":
+                # Parse commodities JSON if needed (optional, if not already parsed)
+                result['commodities'] = json.loads(result['commodities']) if 'commodities' in result else []
+
+            return jsonify(result), 200
+        else:
+            return jsonify({"Status": "Failure", "Message": "No data found"}), 404
+
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
 
@@ -236,7 +259,33 @@ def get_order_summary():
         params = (order_id,)
         # Execute stored procedure
         result = db.call_procedure(procedure_name, params)
-
+        print(result)
         return jsonify( result[0]), 200
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
+
+@orders_bp.route('/insertbillingdetails', methods=['POST'])
+def insert_billing_details():
+    data = request.json
+    try:
+        procedure_name = "InsertBillingDetails"
+        params = (
+            data['order_id'],          # p_order_id
+            data['user_id'],           # p_user_id
+            data['paid_by'],           # p_paid_by (customer_id)
+            data['total_price'],       # p_total_price
+            data['payment_status'],    # p_payment_status
+            data['created_at'],        # p_created_at
+            data['receipt_pdf'],       # p_receipt_pdf
+            data['amount_paid'],       # p_amount_paid
+            data['delivery_date']      # p_delivery_date
+        )
+
+        # Execute the procedure and get the response from the stored procedure
+        message = db.insert_using_procedure(procedure_name, params)
+
+        # Return the message returned by the stored procedure
+        return jsonify(message), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
