@@ -98,7 +98,6 @@ def delete_order(order_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # API to Get Billing Details by Employee ID
 @billing_bp.route('/billing/employee/<int:employee_id>', methods=['GET'])
 def get_billing_by_employee(employee_id):
@@ -108,3 +107,35 @@ def get_billing_by_employee(employee_id):
         return jsonify({"billing_details": billing_data})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# CLOSE Multiple Outstanding Balances
+@billing_bp.route('/close_outstanding_balances', methods=['POST'])
+def close_outstanding_balances():
+    data = request.json
+    try:
+        # Get the list of order_ids from the request
+        order_ids = data.get('order_ids', [])
+
+        if not isinstance(order_ids, list) or not order_ids:
+            return jsonify({"error": "Provide a non-empty list of order_ids"}), 400
+
+        results = []
+        for order_id in order_ids:
+            try:
+                procedure_name = "CloseOutstandingBalanceByOrderId"
+                params = (order_id,)
+                result = db.insert_using_procedure(procedure_name, params)
+                results.append({
+                    "order_id": order_id,
+                    "result": result
+                })
+            except Exception as inner_e:
+                results.append({
+                    "order_id": order_id,
+                    "error": str(inner_e)
+                })
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
