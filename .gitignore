@@ -31,3 +31,6 @@ env/
 .idea/
 
 rough.py
+
+__pycache__/
+*.pyc
