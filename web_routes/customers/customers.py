@@ -160,7 +160,7 @@ def get_outstanding_balance(customer_id):
         if isinstance(result, list) and len(result) == 1 and 'message' in result[0]:
             return jsonify({result[0]['message']}), 404
 
-        return jsonify(result), 200
+        return jsonify({"data":result,"message":"success"}), 200
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500

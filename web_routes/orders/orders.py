@@ -49,15 +49,7 @@ def insert_order_items():
 
         # Execute stored procedure
         result = db.insert_using_procedure(procedure_name, params)
-
-        return jsonify({
-            "data": {
-                "orderId": result["orderId"],
-                "orderItemIds": result["orderItemIds"],
-                "totalPrice": result["totalPrice"],
-            },
-            "message": result["message"]
-        }), 201
+        return jsonify({"data":result,"message":"All order items added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -201,7 +193,7 @@ def get_order_details_bystage():
         results = db.call_procedure(procedure_name, params)
 
         if not results:
-            return jsonify({"Status": "Failure", "Message": "No data found"}), 404
+            return jsonify({"data": None, "message": "No data found"}), 404
 
         result = results[0]
 
@@ -219,11 +211,11 @@ def get_order_details_bystage():
             except Exception:
                 result['commodities'] = []
 
-        return jsonify(result), 200
+        return jsonify({"data":result,"message":"success"}), 200
 
     except Exception as e:
         # Optionally: log the error here
-        return jsonify({"Status": "Failure", "Message": str(e)}), 500
+        return jsonify({"data": None, "message": str(e)}), 500
 
 @orders_bp.route('/getordersummary', methods=['POST'])
 def get_order_summary():
@@ -252,7 +244,7 @@ def get_order_summary():
 
         return jsonify( result[0]), 200
     except Exception as e:
-        return jsonify({"Status": "Failure", "Message": str(e)}), 500
+        return jsonify({"data": None, "Message": str(e)}), 500
 
 @orders_bp.route('/insertbillingdetails', methods=['POST'])
 def insert_billing_details():

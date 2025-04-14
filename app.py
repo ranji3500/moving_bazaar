@@ -49,8 +49,6 @@ def verify_token():
         return jsonify({"error": str(e)}), 401
 
 
-
-
 if __name__ == '__main__':
     app.run(host='localhost', port=5008, threaded=False,debug =True)
 
