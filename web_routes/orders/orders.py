@@ -246,28 +246,54 @@ def get_order_summary():
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500
 
-@orders_bp.route('/insertbillingdetails', methods=['POST'])
-def insert_billing_details():
-    data = request.json
+
+
+
+
+
+@orders_bp.route('/getorderdeliverdetails', methods=['POST'])
+def get_order_delivery_details():
+    """
+    API to fetch paginated order details by order status and/or order ID.
+
+    Request Body (JSON):
+    {
+        "order_status": "Shipped",         # Optional
+        "order_id": "ORD123",              # Optional (partial match supported)
+        "page_number": 1,                  # Required (must be >= 1)
+        "page_size": 10                    # Required (must be >= 1)
+    }
+    """
     try:
-        procedure_name = "InsertBillingDetails"
-        params = (
-            data['order_id'],          # p_order_id
-            data['user_id'],           # p_user_id
-            data['paid_by'],           # p_paid_by (customer_id)
-            data['total_price'],       # p_total_price
-            data['payment_status'],    # p_payment_status
-            data['created_at'],        # p_created_at
-            data['receipt_pdf'],       # p_receipt_pdf
-            data['amount_paid'],       # p_amount_paid
-            data['delivery_date']      # p_delivery_date
-        )
+        data = request.get_json()
 
-        # Execute the procedure and get the response from the stored procedure
-        message = db.insert_using_procedure(procedure_name, params)
+        if not data:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+            }), 400
 
-        # Return the message returned by the stored procedure
-        return jsonify(message), 200
+        order_status = data.get("order_status", None)
+        order_id = data.get("order_id", None)
+        page_number = data.get("page_number", 1)
+        page_size = data.get("page_size", 10)
+
+        # Validate pagination inputs
+        if page_number < 1 or page_size < 1:
+            return jsonify({
+                "status": "Failure",
+                "message": "page_number and page_size must be integers >= 1"
+            }), 400
+
+        procedure_name = "GetOrderDetailsByStatus"
+        params = (order_status, order_id, page_number, page_size)
+
+        # Call stored procedure and return result
+        result = db.call_procedure(procedure_name, params)
+        return jsonify({"data": result, "message": "success"}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "data": None,
+            "message": str(e)
+        }), 500

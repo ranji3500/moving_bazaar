@@ -5,7 +5,6 @@ from db_function import db
 
 
 
-
 # ✅ API: Generate Billing
 @billing_bp.route('/generate_billing', methods=['POST'])
 def generate_billing():
@@ -25,7 +24,6 @@ def generate_billing():
         return jsonify(result), 201
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 # ✅ Create a new order
 @billing_bp.route('/get_order_commodities/<int:order_id>', methods=['GET'])
@@ -139,3 +137,39 @@ def close_outstanding_balances():
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+import  json
+@billing_bp.route('/insertbillingdetails', methods=['POST'])
+def insert_billing_details():
+    data = request.json
+    try:
+        # Stored procedure name
+        procedure_name = "insert_billing"
+
+        # Extracting parameters from the incoming JSON data using data.get()
+        params = (
+            data.get('order_id'),  # p_order_id
+            data.get('user_id'),  # p_employee_id (user_id corresponds to employee_id)
+            data.get('paid_by'),  # p_paid_by (customer_id corresponds to paid_by)
+            data.get('grand_total'),  # p_grand_total
+            data.get('current_order_value'),  # p_current_order_value
+            data.get('total_amount_paid'),  # p_total_amount_paid
+            data.get('current_order_amount_paid'),  # p_current_order_amount_paid
+            data.get('outstanding_amount_paid'),  # p_outstanding_amount_paid
+            json.dumps(data.get('closed_outstanding_order_ids', [])),  # Ensure it's converted to JSON format
+            data.get('delivery_date')  # p_delivery_date
+        )
+
+        # Check if any required parameter is missing
+        if None in params:
+            return jsonify({"error": "Missing required fields in the request"}), 400
+
+        # Execute the procedure and get the response from the stored procedure
+        message = db.insert_using_procedure(procedure_name, params)
+
+        # Return the message returned by the stored procedure
+        return jsonify({"data":{"billing_id":message["billing_id"],"stage":"delivery"},"message":message["message"]}), 200
+
+    except Exception as e:
+        # Return error message if something goes wrong
+        return jsonify({"error": str(e)}), 500
