@@ -168,7 +168,7 @@ def insert_billing_details():
         message = db.insert_using_procedure(procedure_name, params)
 
         # Return the message returned by the stored procedure
-        return jsonify({"data":{"billing_id":message["billing_id"],"stage":"delivery"},"message":message["message"]}), 200
+        return jsonify({"data":{"billingId":message["billing_id"],"orderId":message['order_id'],"orderStage":"delivery"},"message":message["message"]}), 200
 
     except Exception as e:
         # Return error message if something goes wrong

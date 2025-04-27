@@ -253,17 +253,6 @@ def get_order_summary():
 
 @orders_bp.route('/getorderdeliverdetails', methods=['POST'])
 def get_order_delivery_details():
-    """
-    API to fetch paginated order details by order status and/or order ID.
-
-    Request Body (JSON):
-    {
-        "order_status": "Shipped",         # Optional
-        "order_id": "ORD123",              # Optional (partial match supported)
-        "page_number": 1,                  # Required (must be >= 1)
-        "page_size": 10                    # Required (must be >= 1)
-    }
-    """
     try:
         data = request.get_json()
 
@@ -278,7 +267,6 @@ def get_order_delivery_details():
         page_number = data.get("page_number", 1)
         page_size = data.get("page_size", 10)
 
-        # Validate pagination inputs
         if page_number < 1 or page_size < 1:
             return jsonify({
                 "status": "Failure",
@@ -288,12 +276,25 @@ def get_order_delivery_details():
         procedure_name = "GetOrderDetailsByStatus"
         params = (order_status, order_id, page_number, page_size)
 
-        # Call stored procedure and return result
         result = db.call_procedure(procedure_name, params)
-        return jsonify({"data": result, "message": "success"}), 200
+
+        if not result or len(result) < 1:
+            return jsonify({
+                "status": "Failure",
+                "message": "No data returned from procedure"
+            }), 500
+
+        # First item is total_records dict, rest are order rows
+        total_records = result[0].get("total_records", 0)
+        orders_data = result[1:]  # Remaining entries are actual data
+
+        return jsonify({
+            "data": {"orders":orders_data ,"currentPage": page_number,"pageSize": page_size,"totalRecords": total_records,
+},"message": "success"
+        }), 200
 
     except Exception as e:
         return jsonify({
-            "data": None,
-            "message": str(e)
+            "message": str(e),
+            "data": None
         }), 500
