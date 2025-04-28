@@ -285,7 +285,7 @@ def get_order_delivery_details():
             }), 500
 
         # First item is total_records dict, rest are order rows
-        total_records = result[0].get("total_records", 0)
+        total_records = result[0].get("totalRecords", 0)
         orders_data = result[1:]  # Remaining entries are actual data
 
         return jsonify({
@@ -295,6 +295,54 @@ def get_order_delivery_details():
 
     except Exception as e:
         return jsonify({
+            "message": str(e),
+            "data": None
+        }), 500
+
+@orders_bp.route('/insertdocuments', methods=['POST'])
+def insert_documents():
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+            }), 400
+
+        order_id = data.get("order_id", None)
+        images = data.get("images", None)  # Expecting a list of image paths
+        doc_type = data.get("doc_type", "commodities")  # Default to "commodities" if not provided
+
+        if not order_id or not images or not isinstance(images, list):
+            return jsonify({
+                "status": "Failure",
+                "message": "order_id and images (list) are required fields."
+            }), 400
+
+        # Convert Python list to JSON array string for MySQL
+        images_json_array = json.dumps(images)
+
+        procedure_name = "insertDocument"
+        params = (order_id, images_json_array, doc_type)
+
+        result = db.call_procedure(procedure_name, params)
+
+        if result is None:
+            return jsonify({
+                "status": "Failure",
+                "message": "No response from database procedure."
+            }), 500
+
+        return jsonify({
+            "status": "Success",
+            "message": "Documents inserted successfully.",
+            "data": result
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "Failure",
             "message": str(e),
             "data": None
         }), 500
