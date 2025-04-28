@@ -5,6 +5,8 @@ newenv/
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyc
 
 # Distribution / packaging
 build/
@@ -30,12 +32,5 @@ env/
 # PyCharm settings (optional)
 .idea/
 
+# Rough work file (optional if you don't want to track it)
 rough.py
-
-__pycache__/
-*.pyc
-
-# Ignore Python cache files
-__pycache__/
-*.py[cod]
-*.pyo
