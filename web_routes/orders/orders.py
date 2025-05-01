@@ -467,45 +467,59 @@ def get_document_by_id():
 @orders_bp.route('/getdocumentsbyorderandcategory', methods=['GET'])
 def get_documents_by_order_and_category():
     """
-    API to fetch documents based on order_id and category using the stored procedure 'GetDocumentsByOrderAndCategory'.
+    API to fetch documents based on order_id and category using the stored procedure 'getDocumentsByOrderIdAndCatagory'.
 
-    Request URL (Query Parameters):
-    /getdocumentsbyorderandcategory?order_id=1068025&category=commodities
+    Example:
+    /getdocumentsbyorderandcategory?orderId=1068025&category=commodities
     """
     try:
         # Extract query parameters
         order_id = request.args.get('orderId')
         category = request.args.get('category')
 
-        # Validate input
         if not order_id or not category:
             return jsonify({
                 "status": "Failure",
-                "message": "Missing 'order_id' or 'category' query parameter."
+                "message": "Missing 'orderId' or 'category' query parameter.",
+                "documents": []
             }), 400
 
         # Call stored procedure
         procedure_name = "getDocumentsByOrderIdAndCatagory"
         params = (order_id, category)
-        result = db.call_procedure(procedure_name, params)
+        db_result = db.call_procedure(procedure_name, params)  # List of rows from DB
 
-        # Check for empty result
-        if not result:
+        if not db_result:
             return jsonify({
                 "status": "Failure",
-                "message": "No documents found for the given order ID and category."
+                "message": "No documents found for the given order ID and category.",
+                "documents": []
             }), 404
 
+        # Get public path from config
+        public_url_prefix = current_app.config.get('PUBLIC_UPLOAD_PATH', '/uploads')
+
+        # Format result
+        documents = []
+        for row in db_result:
+            documents.append({
+                "documentId": row.get('id') or row.get('doc_id'),
+                "documentName": row.get('path'),
+                "documentCategory": "Order Invoice" if category == "invoice" else "Commodities",
+                "requestPath": f"{public_url_prefix}/{row.get('path')}"
+            })
+
         return jsonify({
-            "status": "Success",
-            "data": result
+            "documents": documents
         }), 200
 
     except Exception as e:
         return jsonify({
             "status": "Error",
-            "message": str(e)
+            "message": str(e),
+            "documents": []
         }), 500
+
 
 
 @orders_bp.route('/getdocumentfile/<filename>', methods=['GET'])
