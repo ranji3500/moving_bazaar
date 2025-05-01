@@ -510,7 +510,7 @@ def get_documents_by_order_and_category():
             })
 
         return jsonify({
-            "documents": documents
+            "data": documents
         }), 200
 
     except Exception as e:
