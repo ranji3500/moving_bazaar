@@ -422,7 +422,7 @@ def insert_documents():
                 "requestPath": f"{public_url_prefix}/{file_name}"
             })
 
-        return jsonify({"documents": documents}), 200
+        return jsonify({"data": documents}), 200
 
     except Exception as e:
         return jsonify({
