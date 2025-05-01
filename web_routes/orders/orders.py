@@ -1,10 +1,12 @@
-from flask import jsonify, request
+from flask import jsonify, request ,current_app ,send_from_directory
 from . import orders_bp
 import mysql.connector
 from db_function import db
-
+from werkzeug.utils import secure_filename
+import  os
 import json
-
+from uuid import uuid4
+import os
 
 # ✅ Create a new order
 @orders_bp.route('/create_order', methods=['POST'])
@@ -247,10 +249,6 @@ def get_order_summary():
         return jsonify({"data": None, "Message": str(e)}), 500
 
 
-
-
-
-
 @orders_bp.route('/getorderdeliverdetails', methods=['POST'])
 def get_order_delivery_details():
     try:
@@ -299,50 +297,325 @@ def get_order_delivery_details():
             "data": None
         }), 500
 
+@orders_bp.route('/getdeliverorderdetails', methods=['GET'])
+def getdeliverorderdetails():
+    """
+    GET API to fetch detailed order and document information using 'GetOrderAndStores'.
+
+    Query Parameter:
+    - order_id (int): The ID of the order
+
+    Response Format:
+    {
+        "data": {
+            "senderId": ...,
+            "receiverId": ...,
+            "orderStatus": "...",
+            "senderStoreName": "...",
+            "receiverStoreName": "...",
+            "documents": [ {...}, {...} ]
+        },
+        "message": "success"
+    }
+    """
+    try:
+        order_id = request.args.get('order_id', type=int)
+
+        if not order_id:
+            return jsonify({
+                "Status": "Failure",
+                "Message": "Missing or invalid 'order_id' in query parameters."
+            }), 400
+
+        # Call stored procedure
+        result = db.call_procedure("GetOrderAndStores", (order_id,))
+
+        if not result or not result[0]:
+            return jsonify({
+                "data": {},
+                "message": "No data found"
+            }), 200
+
+        rows = result
+
+        # Extract shared order-level details from the first row
+        first_row = rows[0]
+        order_data = {
+            "senderId": first_row["senderId"],
+            "receiverId": first_row["receiverId"],
+            "orderStatus": first_row["orderStatus"],
+            "senderStoreName": first_row["senderStoreName"],
+            "receiverStoreName": first_row["receiverStoreName"],
+            "documents": []
+        }
+
+        # Build the documents list
+        for row in rows:
+            paths_raw = row.get("paths")
+            try:
+                paths = json.loads(paths_raw) if paths_raw else []
+            except Exception:
+                paths = []
+
+            order_data["documents"].append({
+                "docId": row["docId"],
+                "paths": paths,
+                "category": row["category"]
+            })
+
+        return jsonify({
+            "data": order_data,
+            "message": "success"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "data": None,
+            "message": str(e)
+        }), 500
+
 @orders_bp.route('/insertdocuments', methods=['POST'])
 def insert_documents():
     try:
-        data = request.get_json()
+        # Get form fields
+        order_id = request.form.get("orderId", type=int)
+        doc_type = request.form.get("doctype", "commodities")
+        files = request.files.getlist("paths")  # List of uploaded files
 
-        if not data:
+        if not order_id or not files:
             return jsonify({
                 "status": "Failure",
-                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+                "message": "order_id and at least one file in 'paths' are required."
             }), 400
 
-        order_id = data.get("order_id", None)
-        images = data.get("images", None)  # Expecting a list of image paths
-        doc_type = data.get("doc_type", "commodities")  # Default to "commodities" if not provided
+        saved_file_paths = []
 
-        if not order_id or not images or not isinstance(images, list):
-            return jsonify({
-                "status": "Failure",
-                "message": "order_id and images (list) are required fields."
-            }), 400
+        # Get upload folder from config
+        upload_folder = current_app.config['UPLOAD_FOLDER']
 
-        # Convert Python list to JSON array string for MySQL
-        images_json_array = json.dumps(images)
 
+        # Inside your loop
+        for file in files:
+            if file.filename == '':
+                continue  # skip empty filenames
+
+            original_name = secure_filename(file.filename)
+            ext = os.path.splitext(original_name)[1]
+            unique_filename = f"{uuid4().hex}{ext}"
+
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            saved_file_paths.append(unique_filename)
+
+        images_json_array = json.dumps(saved_file_paths)
+
+        # Call the stored procedure
         procedure_name = "insertDocument"
         params = (order_id, images_json_array, doc_type)
-
-        result = db.call_procedure(procedure_name, params)
-
-        if result is None:
-            return jsonify({
-                "status": "Failure",
-                "message": "No response from database procedure."
-            }), 500
+        result = db.insert_using_procedure(procedure_name, params)
 
         return jsonify({
-            "status": "Success",
             "message": "Documents inserted successfully.",
             "data": result
         }), 200
 
     except Exception as e:
         return jsonify({
-            "status": "Failure",
             "message": str(e),
             "data": None
         }), 500
+
+@orders_bp.route('/getdocumentbyid', methods=['GET'])
+def get_document_by_id():
+    """
+    API to fetch document details by document ID using the stored procedure 'getDocumentById'.
+
+    Request URL (Query Parameters):
+    /getdocumentbyid?doc_id=14
+    """
+    try:
+        # Get the doc_id from query string
+        doc_id = request.args.get('docId')
+
+        if not doc_id:
+            return jsonify({"Status": "Failure", "Message": "Missing or invalid 'doc_id' parameter in the URL query string."}), 400
+
+        procedure_name = "getDocumentById"
+        params = (doc_id,)
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        # Check if the result is empty (document not found)
+        if len(result) == 0:
+            return jsonify({"Message": "Document not found."}), 202
+
+        # If document found, return it
+        return jsonify({"data":result[0],"message":"success"}), 200  # Correct status code for success
+
+    except Exception as e:
+        return jsonify({"data": None, "Message": str(e)}), 500  # Internal Server Error in case of unexpected exceptions
+
+
+
+@orders_bp.route('/getdocumentsbyorderandcategory', methods=['GET'])
+def get_documents_by_order_and_category():
+    """
+    API to fetch documents based on order_id and category using the stored procedure 'GetDocumentsByOrderAndCategory'.
+
+    Request URL (Query Parameters):
+    /getdocumentsbyorderandcategory?order_id=1068025&category=commodities
+    """
+    try:
+        # Extract query parameters
+        order_id = request.args.get('orderId')
+        category = request.args.get('category')
+
+        # Validate input
+        if not order_id or not category:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing 'order_id' or 'category' query parameter."
+            }), 400
+
+        # Call stored procedure
+        procedure_name = "getDocumentsByOrderIdAndCatagory"
+        params = (order_id, category)
+        result = db.call_procedure(procedure_name, params)
+
+        # Check for empty result
+        if not result:
+            return jsonify({
+                "status": "Failure",
+                "message": "No documents found for the given order ID and category."
+            }), 404
+
+        return jsonify({
+            "status": "Success",
+            "data": result
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "Error",
+            "message": str(e)
+        }), 500
+
+
+@orders_bp.route('/getdocumentfile/<filename>', methods=['GET'])
+def get_image_by_filename(filename):
+    """
+    Serve an image file from the UPLOAD_FOLDER or its subdirectories by filename.
+    The image is displayed directly in the browser.
+    """
+    try:
+        upload_root = current_app.config['UPLOAD_FOLDER']
+
+        # Search for the image file in all subdirectories
+        for root, dirs, files in os.walk(upload_root):
+            if filename in files:
+                # Return the image to be rendered in browser (not downloaded)
+                return send_from_directory(root, filename)
+
+        return jsonify({
+            "status": "Failure",
+            "message": f"Image '{filename}' not found."
+        }), 404
+
+    except Exception as e:
+        return jsonify({
+            "status": "Error",
+            "message": str(e)
+        }), 500
+
+# Assuming db.call_procedure is defined for calling stored procedures
+@orders_bp.route('/deletedocument', methods=['DELETE'])
+def delete_document():
+    """
+    API to delete a document based on doc_id using the stored procedure 'deleteDocumentById'.
+
+    Request URL (Query Parameters):
+    /deletedocument?doc_id=21
+    """
+    try:
+        # Extract query parameter
+        doc_id = request.args.get('docId')
+
+        # Validate input
+        if not doc_id:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing 'doc_id' query parameter."
+            }), 400
+
+        # Call stored procedure to delete document by doc_id
+        procedure_name = "deleteDocumentById"
+        params = (doc_id,)
+        result = db.insert_using_procedure(procedure_name, params)
+
+        return jsonify({
+            "message": result["message"],
+            "doc_id": result["docId"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "message": str(e)
+        }), 500
+
+
+@orders_bp.route('/getreasonbyid', methods=['GET'])
+def get_reason_by_id():
+    """
+    API to fetch reason by ID using the stored procedure 'getReasonById'.
+
+    Request URL (Query Parameters):
+    /getreasonbyid?reason_id=3
+    """
+    try:
+        # Get the reason_id from the query string
+        reason_id = request.args.get('reasonId')
+
+        if not reason_id:
+            return jsonify({"Status": "Failure", "Message": "Missing or invalid 'reason_id' parameter in the URL query string."}), 400
+
+        procedure_name = "getReasonById"
+        params = (reason_id,)
+
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        # Check if result is empty
+        if not result:
+            return jsonify({"Message": "Reason not found."}), 202
+
+        # Return the result
+        return jsonify({"data": result[0], "message": "success"}), 200
+
+    except Exception as e:
+        return jsonify({"data": None, "Message": str(e)}), 500
+
+
+@orders_bp.route('/getallreasons', methods=['GET'])
+def get_all_reasons():
+    """
+    API to fetch all delivery failure reasons using the stored procedure 'getAllReasons'.
+
+    Request URL: /getallreasons
+    """
+    try:
+        # Stored procedure name
+        procedure_name = "getAllReasons"
+        params = ()  # No parameters needed to fetch all reasons
+
+        # Execute stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        # Check if result is empty
+        if not result:
+            return jsonify({"Message": "No reasons found."}), 202
+
+        # Return the list of reasons
+        return jsonify({"data": result, "message": "success"}), 200
+
+    except Exception as e:
+        return jsonify({"data": None, "Message": str(e)}), 500

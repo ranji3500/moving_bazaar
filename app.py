@@ -5,7 +5,7 @@ from web_routes.admin import admin_bp
 from web_routes.customers import customers_bp
 from web_routes.billing import billing_bp
 from web_routes.orders import orders_bp
-
+import os
 
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
@@ -13,6 +13,14 @@ from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jw
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+
+# Set the upload folder path
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'documents')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Optional: Limit upload size (e.g., 16MB max)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+# Ensure the folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 jwt = JWTManager(app)
@@ -47,6 +55,17 @@ def verify_token():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 401
+
+
+
+from werkzeug.utils import secure_filename
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 
 if __name__ == '__main__':

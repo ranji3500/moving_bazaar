@@ -249,5 +249,23 @@ CALL get_order_commodities(56224403);
 CALL get_billing_by_order(56224403);
 
 
-CALL update_receipt_pdf(56224403, 'https://example.com/receipts/bill')
+CALL update_receipt_pdf(56224403, 'https://example.com/receipts/bill');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
