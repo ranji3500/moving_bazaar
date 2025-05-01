@@ -412,17 +412,8 @@ def insert_documents():
         params = (order_id, images_json_array, doc_type)
         db_result = db.insertall_using_procedure(procedure_name, params)  # returns list of rows with 'documentId'
 
-        # Build final document list
-        documents = []
-        for file_name, row in zip(saved_file_names, db_result):
-            documents.append({
-                "documentId": row['documentId'],
-                "documentName": file_name,
-                "documentCategory": "Order Invoice" if doc_type == "invoice" else "Commodities",
-                "requestPath": f"{public_url_prefix}/{file_name}"
-            })
 
-        return jsonify({"documents": documents}), 200
+        return jsonify({"data": db_result}), 200
 
     except Exception as e:
         return jsonify({
