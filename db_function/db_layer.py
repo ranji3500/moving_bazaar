@@ -106,6 +106,38 @@ class AdvancedDatabase(MySQLDatabase):
             cursor.close()
             self.close_connection(connection)
 
+    def insertall_using_procedure(self, procedure_name, params):
+        """
+        Call a stored procedure and return all rows as a list of dictionaries.
+
+        :param procedure_name: Name of the stored procedure.
+        :param params: Parameters for the stored procedure.
+        :return: List of dictionaries, each representing a row.
+        """
+        connection = self.get_connection()
+        try:
+            cursor = connection.cursor()
+
+            # Call the procedure
+            cursor.callproc(procedure_name, params)
+
+            result_list = []
+            for result in cursor.stored_results():
+                columns = [desc[0] for desc in result.description]
+                for row in result.fetchall():
+                    result_list.append(dict(zip(columns, row)))
+
+            connection.commit()
+            print(f"Procedure '{procedure_name}' executed successfully.")
+            return result_list  # Return all rows
+
+        except mysql.connector.Error as err:
+            print(f"Error executing procedure '{procedure_name}': {err}")
+            raise
+        finally:
+            cursor.close()
+            self.close_connection(connection)
+
     def connection_check(self):
         """
         Check if the database connection is active and functioning.

@@ -374,56 +374,63 @@ def getdeliverorderdetails():
             "message": str(e)
         }), 500
 
+
 @orders_bp.route('/insertdocuments', methods=['POST'])
 def insert_documents():
     try:
-        # Get form fields
         order_id = request.form.get("orderId", type=int)
-        doc_type = request.form.get("doctype", "commodities")
-        files = request.files.getlist("paths")  # List of uploaded files
+        doc_type = request.form.get("doctype", "commodities")  # e.g., "invoice"
+        files = request.files.getlist("paths")
 
         if not order_id or not files:
             return jsonify({
                 "status": "Failure",
-                "message": "order_id and at least one file in 'paths' are required."
+                "message": "order_id and at least one file in 'paths' are required.",
+                "documents": []
             }), 400
 
-        saved_file_paths = []
-
-        # Get upload folder from config
         upload_folder = current_app.config['UPLOAD_FOLDER']
+        public_url_prefix = current_app.config.get('PUBLIC_UPLOAD_PATH', '/uploads')  # e.g., for static access
 
+        saved_file_names = []
 
-        # Inside your loop
         for file in files:
             if file.filename == '':
-                continue  # skip empty filenames
+                continue
 
             original_name = secure_filename(file.filename)
             ext = os.path.splitext(original_name)[1]
-            unique_filename = f"{uuid4().hex}{ext}"
-
+            unique_filename = f"{order_id}_{doc_type}_{uuid4().hex}{ext}"
             filepath = os.path.join(upload_folder, unique_filename)
             file.save(filepath)
-            saved_file_paths.append(unique_filename)
+            saved_file_names.append(unique_filename)
 
-        images_json_array = json.dumps(saved_file_paths)
+        images_json_array = json.dumps(saved_file_names)
 
-        # Call the stored procedure
+        # Call stored procedure
         procedure_name = "insertDocument"
         params = (order_id, images_json_array, doc_type)
-        result = db.insert_using_procedure(procedure_name, params)
+        db_result = db.insertall_using_procedure(procedure_name, params)  # returns list of rows with 'documentId'
 
-        return jsonify({
-            "message": "Documents inserted successfully.",
-            "data": result
-        }), 200
+        # Build final document list
+        documents = []
+        for file_name, row in zip(saved_file_names, db_result):
+            documents.append({
+                "documentId": row['documentId'],
+                "documentName": file_name,
+                "documentCategory": "Order Invoice" if doc_type == "invoice" else "Commodities",
+                "requestPath": f"{public_url_prefix}/{file_name}"
+            })
+
+        return jsonify({"documents": documents}), 200
 
     except Exception as e:
         return jsonify({
             "message": str(e),
-            "data": None
+            "documents": []
         }), 500
+
+
 
 @orders_bp.route('/getdocumentbyid', methods=['GET'])
 def get_document_by_id():
