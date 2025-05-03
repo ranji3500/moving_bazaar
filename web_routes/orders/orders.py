@@ -422,7 +422,6 @@ def insert_documents():
         }), 500
 
 
-
 @orders_bp.route('/getdocumentbyid', methods=['GET'])
 def get_document_by_id():
     """
@@ -452,7 +451,6 @@ def get_document_by_id():
 
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500  # Internal Server Error in case of unexpected exceptions
-
 
 
 @orders_bp.route('/getdocumentsbyorderandcategory', methods=['GET'])
@@ -617,3 +615,40 @@ def get_all_reasons():
 
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500
+
+
+@orders_bp.route('/updatedeliverorder', methods=['PUT'])
+def updatedeliverorder():
+    """
+    PUT API to update an order's status and reason using stored procedure 'UpdateOrderStatusAndReason'.
+
+    Request URL: /updateorder
+    Expected JSON:
+    {
+        "order_id": 1068025,
+        "order_status": "Delivered",
+        "reason": "Success"
+    }
+    """
+    try:
+        data = request.get_json()
+
+        order_id = data.get("orderId")
+        order_status = data.get("orderStatus")
+        reason = data.get("reason")
+
+        # Validate input
+        if not all([order_id, order_status, reason]):
+            return jsonify({"message": "Missing one or more required fields: order_id, order_status, reason"}), 400
+
+        # Call stored procedure
+        procedure_name = "UpdateOrderStatusAndReason"
+        params = (order_id, order_status, reason)
+
+        result = db.call_procedure(procedure_name, params)
+
+        # Return the response from the stored procedure
+        return jsonify({"data": result, "message": "Order updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Internal Server Error: {str(e)}"}), 500

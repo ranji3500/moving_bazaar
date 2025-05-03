@@ -156,10 +156,6 @@ def get_outstanding_balance(customer_id):
         params = (customer_id,)
         result = db.call_procedure(procedure_name, params)  # Assuming this method executes SP and returns data
 
-        # If the stored procedure returns a message (no balance found)
-        if isinstance(result, list) and len(result) == 1 and 'message' in result[0]:
-            return jsonify({result[0]['message']}), 404
-
         return jsonify({"data":result,"message":"success"}), 200
 
     except Exception as e:
