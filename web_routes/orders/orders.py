@@ -210,6 +210,7 @@ def get_order_details_bystage():
         elif stage == "commodity":
             try:
                 result['commodities'] = json.loads(result.get('commodities', '[]'))
+                result['documents'] = json.loads(result.get('documents', '[]'))
             except Exception:
                 result['commodities'] = []
 
@@ -319,7 +320,7 @@ def getdeliverorderdetails():
     }
     """
     try:
-        order_id = request.args.get('order_id', type=int)
+        order_id = request.args.get('orderId', type=int)
 
         if not order_id:
             return jsonify({
@@ -330,38 +331,15 @@ def getdeliverorderdetails():
         # Call stored procedure
         result = db.call_procedure("GetOrderAndStores", (order_id,))
 
+        result = result[0]['result']
+        order_data = json.loads(result)
         if not result or not result[0]:
             return jsonify({
                 "data": {},
                 "message": "No data found"
             }), 200
 
-        rows = result
 
-        # Extract shared order-level details from the first row
-        first_row = rows[0]
-        order_data = {
-            "senderId": first_row["senderId"],
-            "receiverId": first_row["receiverId"],
-            "orderStatus": first_row["orderStatus"],
-            "senderStoreName": first_row["senderStoreName"],
-            "receiverStoreName": first_row["receiverStoreName"],
-            "documents": []
-        }
-
-        # Build the documents list
-        for row in rows:
-            paths_raw = row.get("paths")
-            try:
-                paths = json.loads(paths_raw) if paths_raw else []
-            except Exception:
-                paths = []
-
-            order_data["documents"].append({
-                "docId": row["docId"],
-                "paths": paths,
-                "category": row["category"]
-            })
 
         return jsonify({
             "data": order_data,
@@ -635,7 +613,7 @@ def updatedeliverorder():
 
         order_id = data.get("orderId")
         order_status = data.get("orderStatus")
-        reason = data.get("reason")
+        reason = data.get("reasonId")
 
         # Validate input
         if not all([order_id, order_status, reason]):
@@ -645,7 +623,7 @@ def updatedeliverorder():
         procedure_name = "UpdateOrderStatusAndReason"
         params = (order_id, order_status, reason)
 
-        result = db.call_procedure(procedure_name, params)
+        result = db.insert_using_procedure(procedure_name, params)
 
         # Return the response from the stored procedure
         return jsonify({"data": result, "message": "Order updated successfully"}), 200
