@@ -7,6 +7,7 @@ import  os
 import json
 from uuid import uuid4
 import os
+from datetime import datetime
 
 # ✅ Create a new order
 @orders_bp.route('/create_order', methods=['POST'])
@@ -249,7 +250,6 @@ def get_order_summary():
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500
 
-
 @orders_bp.route('/getorderdeliverdetails', methods=['POST'])
 def get_order_delivery_details():
     try:
@@ -261,39 +261,70 @@ def get_order_delivery_details():
                 "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
             }), 400
 
-        order_status = data.get("order_status", None)
-        order_id = data.get("order_id", None)
-        page_number = data.get("page_number", 1)
-        page_size = data.get("page_size", 10)
+        delivery_date_str = data.get("deliveryDate", None)
+        # Extract input data with defaults
+        order_status = data.get("orderStatus", None)
+        order_id = data.get("searchQuery", None)
+        page_number = int(data.get("pageNumber", 1))
+        page_size = int(data.get("pageSize", 10))
 
+        # Validate pagination
         if page_number < 1 or page_size < 1:
             return jsonify({
                 "status": "Failure",
                 "message": "page_number and page_size must be integers >= 1"
             }), 400
 
-        procedure_name = "GetOrderDetailsByStatus"
-        params = (order_status, order_id, page_number, page_size)
+        # Convert deliveryDate string to Python date if provided
+        delivery_date = None
+        if delivery_date_str:
+            try:
+                delivery_date = datetime.strptime(delivery_date_str, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({
+                    "status": "Failure",
+                    "message": "Invalid deliveryDate format. Expected YYYY-MM-DD."
+                }), 400
 
+        # Match stored procedure parameter order
+        procedure_name = "getOrderDetailsByStatus"
+        params = (order_status, order_id, delivery_date, page_number, page_size)
+
+        # Call the stored procedure
         result = db.call_procedure(procedure_name, params)
 
-        if not result or len(result) < 1:
+        # Validate result structure
+        if not result or len(result) < 2:
             return jsonify({
                 "status": "Failure",
-                "message": "No data returned from procedure"
+                "message": "Procedure did not return expected format"
             }), 500
 
-        # First item is total_records dict, rest are order rows
-        total_records = result[0].get("totalRecords", 0)
-        orders_data = result[1:]  # Remaining entries are actual data
+        # Parse result list: first item is total record count, rest are order rows
+        total_record_item = result[0]
+        if not isinstance(total_record_item, dict) or "totalRecords" not in total_record_item:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing totalRecords in stored procedure result"
+            }), 500
 
+        total_records = total_record_item["totalRecords"]
+        order_rows = result[1:]
+
+        # Return final response
         return jsonify({
-            "data": {"orders":orders_data ,"currentPage": page_number,"pageSize": page_size,"totalRecords": total_records,
-},"message": "success"
+            "data": {
+                "orders": order_rows,
+                "currentPage": page_number,
+                "pageSize": page_size,
+                "totalRecords": total_records
+            },
+            "message": "success"
         }), 200
 
     except Exception as e:
         return jsonify({
+            "status": "Failure",
             "message": str(e),
             "data": None
         }), 500
@@ -339,8 +370,6 @@ def getdeliverorderdetails():
                 "message": "No data found"
             }), 200
 
-
-
         return jsonify({
             "data": order_data,
             "message": "success"
@@ -351,7 +380,6 @@ def getdeliverorderdetails():
             "data": None,
             "message": str(e)
         }), 500
-
 
 @orders_bp.route('/insertdocuments', methods=['POST'])
 def insert_documents():
@@ -399,7 +427,6 @@ def insert_documents():
             "documents": []
         }), 500
 
-
 @orders_bp.route('/getdocumentbyid', methods=['GET'])
 def get_document_by_id():
     """
@@ -429,7 +456,6 @@ def get_document_by_id():
 
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500  # Internal Server Error in case of unexpected exceptions
-
 
 @orders_bp.route('/getdocumentsbyorderandcategory', methods=['GET'])
 def get_documents_by_order_and_category():
@@ -473,7 +499,6 @@ def get_documents_by_order_and_category():
             "status": "Error",
             "message": str(e)
         }), 500
-
 
 @orders_bp.route('/getdocumentfile/<filename>', methods=['GET'])
 def get_image_by_filename(filename):
@@ -536,7 +561,6 @@ def delete_document():
             "message": str(e)
         }), 500
 
-
 @orders_bp.route('/getreasonbyid', methods=['GET'])
 def get_reason_by_id():
     """
@@ -568,7 +592,6 @@ def get_reason_by_id():
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500
 
-
 @orders_bp.route('/getallreasons', methods=['GET'])
 def get_all_reasons():
     """
@@ -594,7 +617,6 @@ def get_all_reasons():
     except Exception as e:
         return jsonify({"data": None, "Message": str(e)}), 500
 
-
 @orders_bp.route('/updatedeliverorder', methods=['PUT'])
 def updatedeliverorder():
     """
@@ -616,7 +638,7 @@ def updatedeliverorder():
         reason = data.get("reasonId")
 
         # Validate input
-        if not all([order_id, order_status, reason]):
+        if not all([order_id, order_status]):
             return jsonify({"message": "Missing one or more required fields: order_id, order_status, reason"}), 400
 
         # Call stored procedure
@@ -630,3 +652,71 @@ def updatedeliverorder():
 
     except Exception as e:
         return jsonify({"message": f"Internal Server Error: {str(e)}"}), 500
+
+@orders_bp.route('/getdraftorderdetails', methods=['POST'])
+def get_draft_order_details():
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+            }), 400
+
+        # Extract input data with defaults
+        # Extract input data with defaults
+        order_status = data.get("orderStatus", None)
+        order_id = data.get("searchQuery", None)
+        page_number = int(data.get("pageNumber", 1))
+        page_size = int(data.get("pageSize", 10))
+
+        # Validate pagination
+        if page_number < 1 or page_size < 1:
+            return jsonify({
+                "status": "Failure",
+                "message": "page_number and page_size must be integers >= 1"
+            }), 400
+
+        # Match stored procedure parameter order
+        procedure_name = "getDraftOrderDetails"
+        params = (order_status, order_id, page_number, page_size)
+
+        # Call the stored procedure
+        result = db.call_procedure(procedure_name, params)
+
+        # Validate result structure
+        if not result or len(result) < 2:
+            return jsonify({
+                "status": "Failure",
+                "message": "Procedure did not return expected format"
+            }), 500
+
+        # Parse result list: first item is total record count, rest are order rows
+        total_record_item = result[0]
+        if not isinstance(total_record_item, dict) or "totalRecords" not in total_record_item:
+            return jsonify({
+                "status": "Failure",
+                "message": "Missing totalRecords in stored procedure result"
+            }), 500
+
+        total_records = total_record_item["totalRecords"]
+        order_rows = result[1:]
+
+        # Return final response
+        return jsonify({
+            "data": {
+                "orders": order_rows,
+                "currentPage": page_number,
+                "pageSize": page_size,
+                "totalRecords": total_records
+            },
+            "message": "success"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "Failure",
+            "message": str(e),
+            "data": None
+        }), 500
