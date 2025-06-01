@@ -4,6 +4,13 @@ from web_routes.employee import employee_bp
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 
+
+
+@employee_bp.route('/', methods=['GET'])
+def index():
+    return "employee server is running"
+
+
 # CREATE Employee
 @employee_bp.route('/create_employee', methods=['POST'])
 def create_employee():

@@ -1,7 +1,14 @@
 from flask import jsonify, request
 from . import billing_bp
-import mysql.connector
 from db_function import db
+from logger_config import setup_logger
+import os
+
+
+# Set up logger for billing
+log_file = os.path.join(os.getcwd(), 'logs', 'billing.log')
+logger = setup_logger('billing', log_file)
+
 
 
 

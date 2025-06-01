@@ -3,6 +3,7 @@ from . import orders_bp
 import mysql.connector
 from db_function import db
 from werkzeug.utils import secure_filename
+# from pdf_creation import generate_invoice
 import  os
 import json
 from uuid import uuid4
@@ -311,16 +312,29 @@ def get_order_delivery_details():
         total_records = total_record_item["totalRecords"]
         order_rows = result[1:]
 
-        # Return final response
-        return jsonify({
-            "data": {
-                "orders": order_rows,
-                "currentPage": page_number,
-                "pageSize": page_size,
-                "totalRecords": total_records
-            },
-            "message": "success"
-        }), 200
+        if len(order_rows) == 1 and list(order_rows[0].keys()) == ['NULL'] and order_rows[0]['NULL'] is None:
+            # Return final response
+            return jsonify({
+                "data": {
+                    "orders": [],
+                    "currentPage": page_number,
+                    "pageSize": page_size,
+                    "totalRecords": total_records
+                },
+                "message": "success"
+            }), 200
+        else:
+
+            # Return final response
+            return jsonify({
+                "data": {
+                    "orders": order_rows,
+                    "currentPage": page_number,
+                    "pageSize": page_size,
+                    "totalRecords": total_records
+                },
+                "message": "success"
+            }), 200
 
     except Exception as e:
         return jsonify({
@@ -397,21 +411,25 @@ def insert_documents():
 
         upload_folder = current_app.config['UPLOAD_FOLDER']
         public_url_prefix = current_app.config.get('PUBLIC_UPLOAD_PATH', '/uploads')  # e.g., for static access
+        if doc_type =="commodities":
 
-        saved_file_names = []
+            saved_file_names = []
 
-        for file in files:
-            if file.filename == '':
-                continue
+            for file in files:
+                if file.filename == '':
+                    continue
 
-            original_name = secure_filename(file.filename)
-            ext = os.path.splitext(original_name)[1]
-            unique_filename = f"{order_id}_{doc_type}_{uuid4().hex}{ext}"
-            filepath = os.path.join(upload_folder, unique_filename)
-            file.save(filepath)
-            saved_file_names.append(unique_filename)
+                original_name = secure_filename(file.filename)
+                ext = os.path.splitext(original_name)[1]
+                unique_filename = f"{order_id}_{doc_type}_{uuid4().hex}{ext}"
+                filepath = os.path.join(upload_folder, unique_filename)
+                file.save(filepath)
+                saved_file_names.append(unique_filename)
 
-        images_json_array = json.dumps(saved_file_names)
+            images_json_array = json.dumps(saved_file_names)
+        else:
+            print("")
+
 
         # Call stored procedure
         procedure_name = "insertDocument"
@@ -701,7 +719,10 @@ def get_draft_order_details():
             }), 500
 
         total_records = total_record_item["totalRecords"]
-        order_rows = result[1:]
+        order_rows = [] if isinstance(result[1], list) and len(result[1]) == 1 and result[1][0].get("NULL") is None \
+            else result[1] if isinstance(result[1], list) \
+            else [result[1]] if isinstance(result[1], dict) and "orderId" in result[1] \
+            else []
 
         # Return final response
         return jsonify({

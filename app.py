@@ -1,4 +1,4 @@
-from flask import Flask,  jsonify
+from flask import Flask,  jsonify ,send_from_directory
 from web_routes.employee import employee_bp
 from web_routes.commodities import commodities_bp
 from web_routes.admin import admin_bp
@@ -10,7 +10,8 @@ import os
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='dist')
+
 app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 
@@ -32,10 +33,29 @@ app.register_blueprint(orders_bp, url_prefix='/orders')
 app.register_blueprint(billing_bp, url_prefix='/billing')
 
 
+
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
-@app.route('/', methods=['GET'])
-def index():
-    return "backend server is running"
+# @app.route('/', methods=['GET'])
+# def index():
+#     return "backend server is running"
+
+# Serve static files (JS, CSS, etc.)
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'static'), filename)
+
+# Catch-all route for SPA
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    file_path = os.path.join(app.static_folder, path)
+    if path != "" and os.path.exists(file_path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        # Serve index.html for React routing
+        return send_from_directory(app.static_folder, 'index.html')
+
+
 
 @app.route('/verify_token', methods=['GET'])
 @jwt_required()  # ✅ This validates the token
