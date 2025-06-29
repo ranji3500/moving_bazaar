@@ -3,37 +3,29 @@ from db_function import db
 from web_routes.employee import employee_bp
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
+from flask_jwt_extended import jwt_required, get_jwt
+
 
 
 
 @employee_bp.route('/', methods=['GET'])
+@jwt_required()
 def index():
     return "employee server is running"
 
-
 # CREATE Employee
-@employee_bp.route('/create_employee', methods=['POST'])
-def create_employee():
-    data = request.json
-    try:
-        procedure_name = "InsertEmployee"
-        params = (
-            data.get('full_name'),
-            data.get('email'),
-            data.get('phone_number'),
-            data.get('password'),
-            data.get('profile_photo', None),
-            data.get('is_admin', False)
-        )
-        rows_affected = db.insert_using_procedure(procedure_name, params)
-        return jsonify({"message": "Employee created successfully", "rows_affected": rows_affected}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
 
 # UPDATE Employee
 @employee_bp.route('/update_employee/<int:emp_id>', methods=['PUT'])
+@jwt_required()
 def update_employee(emp_id):
     data = request.json
+    claims = get_jwt()
+    user_id = claims.get('userId')
+    user_name = claims.get('userName')
+    email = claims.get('email')
+    user_type = claims.get('user_type')
     try:
         procedure_name = "UpdateEmployee"
         params = (
@@ -55,8 +47,14 @@ def update_employee(emp_id):
 
 # DELETE Employee
 @employee_bp.route('/delete_employee/<int:emp_id>', methods=['DELETE'])
+@jwt_required()
 def delete_employee(emp_id):
     try:
+        claims = get_jwt()
+        user_id = claims.get('userId')
+        user_name = claims.get('userName')
+        email = claims.get('email')
+        user_type = claims.get('user_type')
         procedure_name = "DeleteEmployee"
         params = (emp_id,)
         rows_affected = db.insert_using_procedure(procedure_name, params)
@@ -87,7 +85,6 @@ def login_employee():
                 "data": None,
                 "message": "Invalid login credentials"
             }), 401
-
         response_dict = result[0]
 
         if response_dict.get("result_status") == 1:
@@ -124,7 +121,13 @@ def login_employee():
 
 # FORGOT PASSWORD
 @employee_bp.route('/forgot_password', methods=['POST'])
+@jwt_required()
 def forgot_password():
+    claims = get_jwt()
+    user_id = claims.get('userId')
+    user_name = claims.get('userName')
+    email = claims.get('email')
+    user_type = claims.get('user_type')
     data = request.json
     try:
         procedure_name = "ForgotPassword"

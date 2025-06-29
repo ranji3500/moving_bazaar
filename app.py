@@ -33,11 +33,33 @@ app.register_blueprint(orders_bp, url_prefix='/orders')
 app.register_blueprint(billing_bp, url_prefix='/billing')
 
 
-
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
-# @app.route('/', methods=['GET'])
+CORS(app,
+     resources={r"/*": {"origins": "http://localhost:3000"}},
+     supports_credentials=True)# @app.route('/', methods=['GET'])
 # def index():
 #     return "backend server is running"
+
+
+import jwt
+from flask import request, jsonify
+
+# Replace with your actual secret key used to sign the JWTs
+JWT_SECRET = 'your-secret-key'
+JWT_ALGORITHM = 'HS256'
+
+def decode_jwt_from_header():
+    auth_header = request.headers.get('Authorization', None)
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise Exception('Authorization header is missing or invalid')
+
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise Exception('Token expired')
+    except jwt.InvalidTokenError:
+        raise Exception('Invalid token')
 
 # Serve static files (JS, CSS, etc.)
 @app.route('/static/<path:filename>')
