@@ -29,6 +29,20 @@ def format_user_data(results):
 
 
 
+from flask import jsonify, request, make_response
+from . import admin_bp
+from db_function import db
+from flask_jwt_extended import create_access_token
+from datetime import timedelta
+from logger_config import setup_logger
+import os
+
+# Logger setup
+log_file = os.path.join(os.getcwd(), 'logs', 'admin_login.log')
+logger = setup_logger('admin_login', log_file)
+
+
+
 @admin_bp.route('/create_employee', methods=['POST'])
 @jwt_required()
 def create_employee():
@@ -53,18 +67,6 @@ def create_employee():
         return jsonify({"message": "Employee created successfully", "rows_affected": rows_affected}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-from flask import jsonify, request, make_response
-from . import admin_bp
-from db_function import db
-from flask_jwt_extended import create_access_token
-from datetime import timedelta
-from logger_config import setup_logger
-import os
-
-# Logger setup
-log_file = os.path.join(os.getcwd(), 'logs', 'admin_login.log')
-logger = setup_logger('admin_login', log_file)
 
 @admin_bp.route('/login', methods=['POST'])
 def admin_login():

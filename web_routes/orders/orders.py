@@ -620,7 +620,7 @@ def get_draft_order_details():
             return jsonify({"status": "Failure", "message": "Invalid pagination values."}), 400
 
         procedure_name = "getDraftOrderDetails"
-        params = (order_status, order_id, page_number, page_size, employee_id)
+        params = (order_status, page_number, page_size, employee_id)
         result = db.call_procedure(procedure_name, params)
 
         if not result or len(result) < 2:

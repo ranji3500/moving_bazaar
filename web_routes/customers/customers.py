@@ -70,7 +70,7 @@ def delete_customer(customer_id):
 
 # GET Customer by Phone Number
 @customers_bp.route('/get_customer_by_phone', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_customer_by_phone():
     data = request.json
     try:

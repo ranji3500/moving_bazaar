@@ -112,7 +112,7 @@ def get_commodities():
     try:
         procedure_name = "getCommoditiesList"
         params = (employee_id,)
-        result = db.call_procedure(procedure_name, params)
+        result = db.call_procedure(procedure_name)
 
         if result:
             return jsonify({
