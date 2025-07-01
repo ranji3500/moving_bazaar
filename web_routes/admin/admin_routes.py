@@ -1,8 +1,4 @@
-from db_function import db
-from web_routes.admin import admin_bp ,request ,jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from datetime import timedelta
-from flask import request, jsonify, make_response
+from flask_jwt_extended import get_jwt_identity
 import os
 from logger_config import setup_logger
 from flask_jwt_extended import jwt_required, get_jwt
@@ -29,9 +25,9 @@ def format_user_data(results):
 
 
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request
 from . import admin_bp
-from db_function import db
+from supports.db_function import db
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from logger_config import setup_logger

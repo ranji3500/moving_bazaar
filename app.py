@@ -1,10 +1,7 @@
-from flask import Flask,  jsonify ,send_from_directory
-from web_routes.employee import employee_bp
-from web_routes.commodities import commodities_bp
+from flask import Flask,send_from_directory
+from web_routes.deliveryboy import commodities_bp ,employee_bp,orders_bp,billing_bp,customers_bp
 from web_routes.admin import admin_bp
-from web_routes.customers import customers_bp
-from web_routes.billing import billing_bp
-from web_routes.orders import orders_bp
+
 import os
 
 from flask_cors import CORS
@@ -98,9 +95,6 @@ def verify_token():
     except Exception as e:
         return jsonify({"error": str(e)}), 401
 
-
-
-from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 

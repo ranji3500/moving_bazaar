@@ -1,8 +1,8 @@
 from flask import request, jsonify
-from db_function import db
+from supports.db_function import db
 from  . import customers_bp
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt
-from datetime import timedelta
+from flask_jwt_extended import jwt_required, get_jwt
+
 
 # CREATE Customer
 @customers_bp.route('/create_customer', methods=['POST'])

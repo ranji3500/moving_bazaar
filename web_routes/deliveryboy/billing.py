@@ -1,10 +1,12 @@
 from flask import jsonify, request
 from . import billing_bp
-from db_function import db
+from supports.db_function import db
+from supports.pdf_creation import generate_invoice
 from logger_config import setup_logger
 from flask_jwt_extended import jwt_required, get_jwt
 import os
 import json
+import threading
 
 # Set up logger for billing
 log_file = os.path.join(os.getcwd(), 'logs', 'billing.log')
@@ -104,17 +106,6 @@ def delete_order(order_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# API to Get Billing Details by Employee ID
-@billing_bp.route('/billing/employee/<int:employee_id>', methods=['GET'])
-@jwt_required()
-def get_billing_by_employee(employee_id):
-    try:
-        params = (employee_id,)
-        billing_data = db.call_procedure("GetBillingByEmployeeId", params)
-        return jsonify({"billing_details": billing_data})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 # CLOSE Multiple Outstanding Balances
 @billing_bp.route('/close_outstanding_balances', methods=['POST'])
 @jwt_required()
@@ -141,35 +132,129 @@ def close_outstanding_balances():
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
+
+# Background invoice generation
+def generate_invoice_background(order_id):
+    try:
+        invoice_result = db.call_procedure("sp_get_invoice_json", (order_id,))
+        if not invoice_result or not invoice_result[0]:
+            raise ValueError("Invoice generation failed: empty data")
+
+        import json, os
+        from datetime import datetime
+
+        invoice_json_str = invoice_result[0][0]
+        invoice_data = json.loads(invoice_json_str)
+
+        today_str = datetime.now().strftime("%Y%m%d")
+        filename = f"invoice_{order_id}_{today_str}.pdf"
+        documents_dir = os.path.join(os.getcwd(), "documents")
+        os.makedirs(documents_dir, exist_ok=True)
+        pdf_path = os.path.join(documents_dir, filename)
+
+        generate_invoice(invoice_data, pdf_path)
+        logger.info(f"Invoice generated at: {pdf_path}")
+
+    except Exception as invoice_error:
+        logger.warning(f"Invoice generation failed for order {order_id}: {invoice_error}")
+
 @billing_bp.route('/insertbillingdetails', methods=['POST'])
 @jwt_required()
 def insert_billing_details():
-    data = request.json
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request body"}), 400
+
         claims = get_jwt()
         user_id = claims.get("sub")
+        if not user_id:
+            return jsonify({"error": "User ID not found in token"}), 401
 
-        procedure_name = "insert_billing"
+        required_fields = [
+            'order_id', 'paid_by', 'grand_total', 'current_order_value',
+            'total_amount_paid', 'current_order_amount_paid', 'outstanding_amount_paid', 'delivery_date'
+        ]
+
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+        closed_outstanding_ids = data.get('closed_outstanding_order_ids', [])
+        if not isinstance(closed_outstanding_ids, list):
+            return jsonify({"error": "closed_outstanding_order_ids must be a list"}), 400
 
         params = (
-            data.get('order_id'),
+            data['order_id'],
             user_id,
-            data.get('paid_by'),
-            data.get('grand_total'),
-            data.get('current_order_value'),
-            data.get('total_amount_paid'),
-            data.get('current_order_amount_paid'),
-            data.get('outstanding_amount_paid'),
-            json.dumps(data.get('closed_outstanding_order_ids', [])),
-            data.get('delivery_date')
+            data['paid_by'],
+            data['grand_total'],
+            data['current_order_value'],
+            data['total_amount_paid'],
+            data['current_order_amount_paid'],
+            data['outstanding_amount_paid'],
+            json.dumps(closed_outstanding_ids),
+            data['delivery_date']
         )
 
-        if None in params:
-            return jsonify({"error": "Missing required fields in the request"}), 400
+        message = db.insert_using_procedure("insert_billing", params)
 
-        message = db.insert_using_procedure(procedure_name, params)
+        if not isinstance(message, dict):
+            return jsonify({"error": "Unexpected response from billing insertion"}), 500
 
-        return jsonify({"data": {"billingId": message["billing_id"], "orderId": message['order_id'], "orderStage": "delivery"}, "message": message["message"]}), 200
+        if "billing_id" not in message or "order_id" not in message:
+            return jsonify({"error": "Billing insert did not return required IDs"}), 500
+
+        order_id = message['order_id']
+
+        # 🧵 Start the thread
+        threading.Thread(target=generate_invoice_background, args=(order_id,), daemon=True).start()
+
+        return jsonify({
+            "data": {
+                "billingId": message["billing_id"],
+                "orderId": message["order_id"],
+                "orderStage": "delivery"
+            },
+            "message": message.get("message", "Billing inserted successfully")
+        }), 200
+
+    except KeyError as ke:
+        return jsonify({"error": f"Missing key: {ke}"}), 400
+    except Exception as e:
+        logger.exception("Billing insertion failed")
+        return jsonify({"error": str(e)}), 500
+
+
+@billing_bp.route('/test', methods=['GET'])
+def billing_test_api():
+    sample_response = {
+        "status": "success"
+        }
+    return jsonify(sample_response), 200
+
+# API to Get Billing Details by Employee ID
+# API to Get Billing Details by Order ID (POST)
+@billing_bp.route('/invoice_pdf', methods=['POST'])
+def get_invoice_by_orders():
+    try:
+        data = request.get_json()
+
+        if not data or 'order_id' not in data:
+            return jsonify({"error": "Missing 'order_id' in request body"}), 400
+
+        order_id = data['order_id']
+        params = (order_id,)
+        invoice_result = db.call_procedure("sp_get_invoice_json", params)
+
+        if not invoice_result or not invoice_result[0]:
+            return jsonify({"error": "No invoice found for given order ID"}), 404
+
+        import json
+        invoice_json_str = invoice_result[0]["invoice_data"]
+        invoice_data = json.loads(invoice_json_str)
+
+        return jsonify({"invoice_data": invoice_data}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

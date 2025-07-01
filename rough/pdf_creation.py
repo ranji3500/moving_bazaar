@@ -94,42 +94,87 @@ def generate_invoice(data, filename="styled_invoice.pdf", logo_path=None):
 
 
 invoice_data = {
-  "delivery_details": {
-    "estimated_delivery": {
-      "start_date": "Jan 27",
-      "end_date": "Jan 28"
-    },
-    "sender": {
-      "name": "AA Seller",
-      "address": "Apartment 506, Blue Wave Tower Al Barsha 1, Sheikh Zayed Road Dubai, UAE",
-      "email": "Sample@gmail.com",
-      "phone": "971(4)2255112"
-    },
-    "receiver": {
-      "name": "BB Seller",
-      "address": "Apartment 506, Blue Wave Tower Al Barsha 1, Sheikh Zayed Road Dubai, UAE",
-      "email": "Sample@gmail.com",
-      "phone": "971(4)2255112"
+        "billing_details": {
+            "bill_to": {
+                "address": "21, Linking Road, Bandra, Mumbai",
+                "email": "spice.junction@exampljue.com",
+                "name": "Spice Junction",
+                "phone": "87654321"
+            },
+            "grand_total": 41960,
+            "note": "Amount to be paid by the Sender - Spice Junction",
+            "order_summary": [
+                {
+                    "item": "Kids Bicycle",
+                    "quantity": 2,
+                    "total_price": 10400,
+                    "unit_price": 5100
+                },
+                {
+                    "item": "Kids Bicycle",
+                    "quantity": 2,
+                    "total_price": 10400,
+                    "unit_price": 5100
+                },
+                {
+                    "item": "Kids Bicycle",
+                    "quantity": 2,
+                    "total_price": 10400,
+                    "unit_price": 5100
+                },
+                {
+                    "item": "Kids Bicycle",
+                    "quantity": 2,
+                    "total_price": 10400,
+                    "unit_price": 5100
+                },
+                {
+                    "item": "Vegetables",
+                    "quantity": 2,
+                    "total_price": 90,
+                    "unit_price": 45
+                },
+                {
+                    "item": "Vegetables",
+                    "quantity": 2,
+                    "total_price": 90,
+                    "unit_price": 45
+                },
+                {
+                    "item": "Vegetables",
+                    "quantity": 2,
+                    "total_price": 90,
+                    "unit_price": 45
+                },
+                {
+                    "item": "Vegetables",
+                    "quantity": 2,
+                    "total_price": 90,
+                    "unit_price": 45
+                }
+            ],
+            "outstanding_balance": 0,
+            "total": 41960
+        },
+        "delivery_details": {
+            "estimated_delivery": {
+                "end_date": "May 31",
+                "start_date": "May 29"
+            },
+            "receiver": {
+                "address": "123 Street, Area A, New York",
+                "email": "vignesh@example.com",
+                "name": "Vignesh Store",
+                "phone": "12345678"
+            },
+            "sender": {
+                "address": "21, Linking Road, Bandra, Mumbai",
+                "email": "spice.junction@exampljue.com",
+                "name": "Spice Junction",
+                "phone": "87654321"
+            }
+        }
     }
-  },
-  "billing_details": {
-    "bill_to": {
-      "name": "AA Seller",
-      "address": "Apartment 506, Blue Wave Tower Al Barsha 1, Sheikh Zayed Road Dubai, UAE",
-      "email": "Sample@gmail.com",
-      "phone": "971(4)2255112"
-    },
-    "order_summary": [
-      {"item": "Vegetables", "quantity": 2, "unit_price": 21, "total_price": 42},
-      {"item": "Groceries", "quantity": 1, "unit_price": 30, "total_price": 30},
-      {"item": "Others", "quantity": 1, "unit_price": 30, "total_price": 30}
-    ],
-    "total": 102,
-    "outstanding_balance": 10,
-    "grand_total": 112,
-    "note": "Amount to be paid by the Sender - AA Seller"
-  }
-}
 
 pdf_path = generate_invoice(invoice_data,"my.pdf",r"C:\Users\ranji\Downloads\mblogocenter.png")
 print(f"Invoice generated: {pdf_path}")

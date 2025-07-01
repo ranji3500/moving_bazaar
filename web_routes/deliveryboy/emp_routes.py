@@ -1,6 +1,6 @@
-from flask import request, jsonify, make_response
-from db_function import db
-from web_routes.employee import employee_bp
+from flask import request, jsonify
+from supports.db_function import db
+from web_routes.deliveryboy import employee_bp
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from flask_jwt_extended import jwt_required, get_jwt

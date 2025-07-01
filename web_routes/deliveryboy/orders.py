@@ -1,15 +1,15 @@
 from flask import jsonify, request ,current_app ,send_from_directory
 from . import orders_bp
 import mysql.connector
-from db_function import db
+from supports.db_function import db
 from werkzeug.utils import secure_filename
 # from pdf_creation import generate_invoice
-import  os
 import json
 from uuid import uuid4
 import os
 from datetime import datetime
-from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
+
 
 @orders_bp.route('/create_order', methods=['POST'])
 @jwt_required()
@@ -413,9 +413,6 @@ def get_order_delivery_details():
             "data": None
         }), 500
 
-
-
-
 @orders_bp.route('/getdeliverorderdetails', methods=['GET'])
 @jwt_required()
 def getdeliverorderdetails():
@@ -427,7 +424,7 @@ def getdeliverorderdetails():
         if not order_id:
             return jsonify({"Status": "Failure", "Message": "Missing or invalid 'order_id' in query parameters."}), 400
 
-        result = db.call_procedure("GetOrderAndStores", (order_id,employee_id))
+        result = db.call_procedure("GetOrderAndStores", (order_id))
         result = result[0]['result']
         order_data = json.loads(result)
 
