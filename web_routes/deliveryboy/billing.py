@@ -171,14 +171,6 @@ def insert_billing_details():
         if not user_id:
             return jsonify({"error": "User ID not found in token"}), 401
 
-        required_fields = [
-            'order_id', 'paid_by', 'grand_total', 'current_order_value',
-            'total_amount_paid', 'current_order_amount_paid', 'outstanding_amount_paid', 'delivery_date'
-        ]
-
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        if missing_fields:
-            return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
         closed_outstanding_ids = data.get('closed_outstanding_order_ids', [])
         if not isinstance(closed_outstanding_ids, list):

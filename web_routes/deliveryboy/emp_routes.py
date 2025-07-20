@@ -14,7 +14,29 @@ def index():
     return "employee server is running"
 
 # CREATE Employee
-
+@employee_bp.route('/create_customer', methods=['POST'])
+@jwt_required()
+def create_customer():
+    data = request.json
+    claims = get_jwt()
+    user_id = claims.get('userId')
+    try:
+        procedure_name = "insert_customer"
+        params = (
+            user_id,
+            data.get('storeName'),
+            data.get('email'),
+            data.get('phoneNumber'),
+            data.get('whatsappNumber', None),
+            data.get('addressLine1'),
+            data.get('addressLine2', None),
+            data.get('city'),
+            data.get('outstandingPrice', 0.00)
+        )
+        rows_affected = db.insert_using_procedure(procedure_name, params)
+        return jsonify({"message": rows_affected}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # UPDATE Employee
 @employee_bp.route('/update_employee/<int:emp_id>', methods=['PUT'])

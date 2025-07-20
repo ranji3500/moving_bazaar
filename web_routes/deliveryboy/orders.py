@@ -371,9 +371,14 @@ def get_order_delivery_details():
 
         if not result or len(result) < 2:
             return jsonify({
-                "status": "Failure",
-                "message": "Procedure did not return expected format"
-            }), 500
+                "data": {
+                    "orders": [],
+                    "currentPage": page_number,
+                    "pageSize": page_size,
+                    "totalRecords": 0
+                },
+                "message": "success"
+            }), 200
 
         total_record_item = result[0]
         if not isinstance(total_record_item, dict) or "totalRecords" not in total_record_item:

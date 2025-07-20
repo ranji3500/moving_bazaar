@@ -31,8 +31,9 @@ app.register_blueprint(billing_bp, url_prefix='/billing')
 
 
 CORS(app,
-     resources={r"/*": {"origins": "http://localhost:3000"}},
-     supports_credentials=True)# @app.route('/', methods=['GET'])
+     resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}},
+     supports_credentials=True)
+
 # def index():
 #     return "backend server is running"
 
@@ -101,7 +102,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 
 if __name__ == '__main__':
