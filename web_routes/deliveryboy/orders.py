@@ -519,7 +519,7 @@ def get_documents_by_order_and_category():
 
 
 @orders_bp.route('/getdocumentfile/<filename>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_image_by_filename(filename):
     try:
         upload_root = current_app.config['UPLOAD_FOLDER']
@@ -650,3 +650,5 @@ def get_draft_order_details():
 
     except Exception as e:
         return jsonify({"status": "Failure", "message": str(e), "data": None}), 500
+
+

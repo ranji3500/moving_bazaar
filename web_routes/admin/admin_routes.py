@@ -1,9 +1,14 @@
 from flask_jwt_extended import get_jwt_identity
+from flask import jsonify, request ,current_app ,send_from_directory
+
 import os
 from logger_config import setup_logger
 from flask_jwt_extended import jwt_required, get_jwt
 import json
 from datetime import datetime
+from werkzeug.utils import secure_filename
+from uuid import uuid4
+
 
 log_file = os.path.join(os.getcwd(), 'logs', 'employee.log')
 logger = setup_logger('admin', log_file)
@@ -33,34 +38,54 @@ from datetime import timedelta
 from logger_config import setup_logger
 import os
 
+
 # Logger setup
 log_file = os.path.join(os.getcwd(), 'logs', 'admin_login.log')
 logger = setup_logger('admin_login', log_file)
-
-
+upload_folder = os.path.join(os.getcwd(), 'documents')  # or any specific path
 
 @admin_bp.route('/create_employee', methods=['POST'])
 @jwt_required()
 def create_employee():
-    data = request.json
     claims = get_jwt()
     user_id = claims.get('userId')
     user_name = claims.get('userName')
     email = claims.get('email')
     user_type = claims.get('user_type')
+
     try:
+        # Get form fields
+        full_name = request.form.get('fullName')
+        emp_email = request.form.get('email')
+        phone_number = request.form.get('phoneNumber')
+        password = request.form.get('password')
+        is_admin = request.form.get('isAdmin', 'false').lower() == 'true'
+
+        # Handle single profile photo
+        file = request.files.get('profile_photo')
+        profile_photo_filename = None
+
+        if file and file.filename != '':
+            original_name = secure_filename(file.filename)
+            ext = os.path.splitext(original_name)[1]
+            unique_filename = f"{user_id}_profile_{uuid4().hex}{ext}"
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            profile_photo_filename = unique_filename  # store just the filename or path
+
         procedure_name = "InsertEmployee"
         params = (
-            user_id,
-            data.get('full_name'),
-            data.get('email'),
-            data.get('phone_number'),
-            data.get('password'),
-            data.get('profile_photo', None),
-            data.get('is_admin', False)
+            full_name,
+            emp_email,
+            phone_number,
+            password,
+            profile_photo_filename,  # single file name (not JSON array)
+            1
         )
+
         rows_affected = db.insert_using_procedure(procedure_name, params)
-        return jsonify({"message": "Employee created successfully", "rows_affected": rows_affected}), 201
+        return jsonify({"message": rows_affected, "rows_affected": rows_affected}), 201
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -226,70 +251,47 @@ def get_dashboard_overview():
 @jwt_required()
 def getorderoverview():
     try:
-        # Fetch query params from the URL
+        # Query Params
         delivery_date_str = request.args.get("deliveryDate", None)
         order_status = request.args.get("orderStatus", None)
         order_id = request.args.get("searchQuery", None)
         page_number = int(request.args.get("pageNumber", 1))
         page_size = int(request.args.get("pageSize", 10))
+        user_id = request.args.get("userId", None)
 
-        # Validate page values
+        # Validate pagination
         if page_number < 1 or page_size < 1:
-            return jsonify({
-                "status": "Failure",
-                "message": "pageNumber and pageSize must be integers >= 1"
-            }), 400
+            return jsonify({"status": "Failure", "message": "Invalid pagination values"}), 400
 
-        # Validate and parse date
+        # Parse delivery date
         delivery_date = None
         if delivery_date_str:
             try:
                 delivery_date = datetime.strptime(delivery_date_str, "%Y-%m-%d").date()
             except ValueError:
-                return jsonify({
-                    "status": "Failure",
-                    "message": "Invalid deliveryDate format. Expected YYYY-MM-DD."
-                }), 400
+                return jsonify({"status": "Failure", "message": "Invalid deliveryDate format. Use YYYY-MM-DD"}), 400
 
-        # Get user ID from JWT token
-        claims = get_jwt()
-        user_id = claims.get("userId")
-
-        # Call stored procedure
+        # Stored procedure call
         procedure_name = "getOrderDetailsByStatus"
-        params = (order_status, order_id, delivery_date, page_number, page_size)
+        params = (order_status, order_id, delivery_date, page_number, page_size, user_id)
         result = db.call_procedure(procedure_name, params)
 
-        # Validate result structure
+        # Validate result
         if not result or len(result) < 2:
-            return jsonify({
-                "status": "Failure",
-                "message": "Procedure did not return expected format"
-            }), 500
+            return jsonify({"status": "Failure", "message": "Procedure result format is invalid"}), 500
 
         total_record_item = result[0]
         if not isinstance(total_record_item, dict) or "totalRecords" not in total_record_item:
-            return jsonify({
-                "status": "Failure",
-                "message": "Missing totalRecords in stored procedure result"
-            }), 500
+            return jsonify({"status": "Failure", "message": "Missing totalRecords"}), 500
 
         total_records = total_record_item["totalRecords"]
         order_rows = result[1:]
 
-        # Handle no result
-        if len(order_rows) == 1 and list(order_rows[0].keys()) == ['NULL'] and order_rows[0]['NULL'] is None:
-            return jsonify({
-                "data": {
-                    "orders": [],
-                    "currentPage": page_number,
-                    "pageSize": page_size,
-                    "totalRecords": total_records
-                },
-                "message": "success"
-            }), 200
+        # Handle empty result
+        if len(order_rows) == 1 and list(order_rows[0].keys()) == ["orderId"] and order_rows[0]["orderId"] is None:
+            order_rows = []
 
-        # Success response
+        # Return successful response
         return jsonify({
             "data": {
                 "orders": order_rows,
@@ -301,11 +303,7 @@ def getorderoverview():
         }), 200
 
     except Exception as e:
-        return jsonify({
-            "status": "Failure",
-            "message": str(e),
-            "data": None
-        }), 500
+        return jsonify({"status": "Failure", "message": str(e), "data": None}), 500
 
 
 @admin_bp.route('/get_commodities', methods=['GET'])
@@ -655,23 +653,31 @@ def delete_customer(customer_id):
 @jwt_required()
 def insert_commodity():
     try:
-        data = request.get_json()
+        # Extract form data
+        item_name = request.form.get("itemName")
+        description = request.form.get("description")
+        min_order_qty = request.form.get("minOrderQty")
+        max_order_qty = request.form.get("maxOrderQty")
+        price = request.form.get("price")
 
-        if not data:
+        # Extract image file
+        file = request.files.get("itemPhoto")
+        item_photo_filename = None
+
+        if file and file.filename:
+            ext = os.path.splitext(file.filename)[1]
+            unique_filename = f"commodity_{uuid4().hex}{ext}"
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            item_photo_filename = unique_filename
+        else:
             return jsonify({
                 "status": "Failure",
-                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+                "message": "Image (itemPhoto) is required"
             }), 400
 
-        # Extract and validate fields
-        item_name = data.get("itemName")
-        item_photo = data.get("itemPhoto")
-        description = data.get("description")
-        min_order_qty = data.get("minOrderQty")
-        max_order_qty = data.get("maxOrderQty")
-        price = data.get("price")
-
-        required = [item_name, item_photo, description, min_order_qty, max_order_qty, price]
+        # Validate required fields
+        required = [item_name, description, min_order_qty, max_order_qty, price]
         if not all(required):
             return jsonify({
                 "status": "Failure",
@@ -681,7 +687,7 @@ def insert_commodity():
         procedure_name = "insert_commodity"
         params = (
             item_name,
-            item_photo,
+            item_photo_filename,
             description,
             int(min_order_qty),
             int(max_order_qty),
@@ -826,4 +832,179 @@ def fetch_cities():
         }), 500
 
 
+@admin_bp.route('/insertprofile', methods=['POST'])
+@jwt_required()
+def insert_documents():
+    try:
+        claims = get_jwt()
+        employee_id = claims.get("sub")
+
+        order_id = request.form.get("orderId", type=int)
+        doc_type = request.form.get("doctype", "commodities")
+        files = request.files.getlist("paths")
+
+        if not order_id or not files:
+            return jsonify({"status": "Failure", "message": "order_id and at least one file in 'paths' are required.", "documents": []}), 400
+        saved_file_names = []
+
+        for file in files:
+            if file.filename == '':
+                continue
+            original_name = secure_filename(file.filename)
+            ext = os.path.splitext(original_name)[1]
+            unique_filename = f"{order_id}_{doc_type}_{uuid4().hex}{ext}"
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            saved_file_names.append(unique_filename)
+
+        images_json_array = json.dumps(saved_file_names)
+        params = (order_id, images_json_array, doc_type)
+        db_result = db.insertall_using_procedure("insertDocument", params)
+
+        return jsonify({"data": db_result}), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e), "documents": []}), 500
+
+@admin_bp.route('/getdocumentfile/<filename>', methods=['GET'])
+@jwt_required()
+def get_image_by_filename(filename):
+    try:
+        for root, dirs, files in os.walk(upload_folder):
+            if filename in files:
+                return send_from_directory(root, filename)
+
+        return jsonify({"status": "Failure", "message": f"Image '{filename}' not found."}), 404
+
+    except Exception as e:
+        return jsonify({"status": "Error", "message": str(e)}), 500
+
+
+# DELETE Employee
+@admin_bp.route('/delete_employee/<int:emp_id>', methods=['DELETE'])
+@jwt_required()
+def delete_employee(emp_id):
+    try:
+        claims = get_jwt()
+        user_id = claims.get('userId')
+        user_name = claims.get('userName')
+        email = claims.get('email')
+        user_type = claims.get('user_type')
+        procedure_name = "DeleteEmployee"
+        params = (emp_id,)
+        rows_affected = db.insert_using_procedure(procedure_name, params)
+        if rows_affected > 0:
+            return jsonify({"message": "Employee deleted successfully"}), 200
+        else:
+            return jsonify({"message": "Employee not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@admin_bp.route('/userorders/<int:employee_id>', methods=['GET'])
+@jwt_required()
+def get_orders_by_employee(employee_id):
+    try:
+        procedure_name = "GetOrdersByEmployeeId"
+        params = (employee_id,)
+        result = db.call_procedure(procedure_name, params)
+        return jsonify({"Status": "Success", "Orders": result}), 200
+    except Exception as e:
+        return jsonify({"Status": "Failure", "Message": str(e)}), 500
+
+
+@admin_bp.route('/getOrderDetailsByStatus/<userid>', methods=['POST'])
+@jwt_required()
+def get_order_details_by_status(userid):  # ✅ Add parameter here
+    try:
+        claims = get_jwt()
+
+        data = request.json
+        order_status = data.get("order_status", "")
+        order_id = data.get("order_id", "")
+        delivery_date = data.get("delivery_date")  # Expect YYYY-MM-DD
+        page_number = int(data.get("page_number", 1))
+        page_size = int(data.get("page_size", 10))
+
+        params = (
+            order_status,
+            order_id,
+            delivery_date,
+            page_number,
+            page_size,
+            userid
+        )
+
+        results = db.call_procedure("getOrderDetailsByStatus", params)
+
+        if not results or len(results) < 2:
+            return jsonify({"status": "success", "totalRecords": 0, "orders": []}), 200
+
+        total_records = results[0][0].get("totalRecords", 0)
+        orders = results[1]
+
+        return jsonify({
+            "status": "success",
+            "totalRecords": total_records,
+            "orders": orders
+        }), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@admin_bp.route('/get_order_summary/<int:order_id>', methods=['GET'])
+@jwt_required()
+def get_order_summary(order_id):
+    logger.info("Admin requested order summary for order_id: %s", order_id)
+
+    try:
+        procedure_name = "GetOrderSummaryDetails"
+        result = db.call_procedure(procedure_name, [order_id])
+
+        if result and len(result[0]) > 0:
+            logger.info("Order summary retrieved for order_id %s. Rows: %d", order_id, len(result[0]))
+            return jsonify({
+                "data": result,
+                "message": "Order summary retrieved successfully"
+            }), 200
+        else:
+            logger.warning("No summary found for order_id: %s", order_id)
+            return jsonify({"message": f"No summary found for order_id {order_id}"}), 404
+
+    except Exception as e:
+        logger.error("Error fetching order summary for order_id %s: %s", order_id, str(e), exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+@admin_bp.route('/get_order_documents', methods=['GET'])
+@jwt_required()
+def get_order_documents():
+    try:
+        # Get query parameters
+        order_id = request.args.get('order_id', type=int)
+        category = request.args.get('category', default='commodities', type=str)
+
+        logger.info("Admin requested documents for order_id: %s, category: %s", order_id, category)
+
+        # Validate required inputs
+        if not order_id or not category:
+            logger.warning("Missing required parameters: order_id or category")
+            return jsonify({"message": "Missing order_id or category"}), 400
+
+        # Call stored procedure
+        procedure_name = "getOrderDocuments"
+        result = db.call_procedure(procedure_name, [order_id, category])
+
+        if result and len(result[0]) > 0:
+            logger.info("Documents found for order_id %s, category %s", order_id, category)
+            return jsonify({
+                "data": result,
+                "message": "Documents retrieved successfully"
+            }), 200
+        else:
+            logger.warning("No documents found for order_id %s, category %s", order_id, category)
+            return jsonify({"message": "No documents found"}), 404
+
+    except Exception as e:
+        logger.error("Error fetching order documents: %s", str(e), exc_info=True)
+        return jsonify({"error": str(e)}), 500
 

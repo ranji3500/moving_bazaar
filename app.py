@@ -105,7 +105,7 @@ def allowed_file(filename):
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=5008, threaded=False,debug =True)
+    app.run(host='localhost', port=5008, threaded=True,debug =True)
 
 
 

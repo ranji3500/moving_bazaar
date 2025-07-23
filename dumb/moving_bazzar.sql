@@ -73,7 +73,7 @@ CREATE TABLE `billing` (
   CONSTRAINT `billing_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`),
   CONSTRAINT `billing_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `users` (`employeeid`),
   CONSTRAINT `billing_ibfk_3` FOREIGN KEY (`paid_by`) REFERENCES `customer` (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -82,7 +82,7 @@ CREATE TABLE `billing` (
 
 LOCK TABLES `billing` WRITE;
 /*!40000 ALTER TABLE `billing` DISABLE KEYS */;
-INSERT INTO `billing` VALUES (23,42465129,1,5,41960.00,41960.00,41960.00,41960.00,0.00,'[]','Paid','2025-06-01 14:33:45',NULL,'2025-06-01'),(24,4140411,1,5,3996.00,3996.00,3996.00,3996.00,0.00,'[]','Paid','2025-06-16 15:16:06',NULL,'2025-06-16'),(25,50093252,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-29 15:02:52',NULL,'2025-06-29'),(30,177730,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-30 15:31:39',NULL,'2025-06-30');
+INSERT INTO `billing` VALUES (23,42465129,1,5,41960.00,41960.00,41960.00,41960.00,0.00,'[]','Paid','2025-06-01 14:33:45',NULL,'2025-06-01'),(24,4140411,1,5,3996.00,3996.00,3996.00,3996.00,0.00,'[]','Paid','2025-06-16 15:16:06',NULL,'2025-06-16'),(25,50093252,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-29 15:02:52',NULL,'2025-06-29'),(30,177730,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-30 15:31:39',NULL,'2025-06-30'),(32,48123420,10,31,5240.00,5240.00,5240.00,5240.00,0.00,'[]','Paid','2025-07-20 02:27:15',NULL,'2025-07-20'),(33,8304319,10,5,180.00,180.00,180.00,180.00,0.00,'[]','Paid','2025-07-20 12:42:51',NULL,'2025-07-21');
 /*!40000 ALTER TABLE `billing` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -130,7 +130,7 @@ CREATE TABLE `commodity` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`commodity_id`),
   UNIQUE KEY `item_name_UNIQUE` (`item_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=342 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=343 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -139,7 +139,7 @@ CREATE TABLE `commodity` (
 
 LOCK TABLES `commodity` WRITE;
 /*!40000 ALTER TABLE `commodity` DISABLE KEYS */;
-INSERT INTO `commodity` VALUES (311,'Fruits','fruits.jpg','edgeyhey',1,50,70.00,'2025-05-10 06:30:00'),(312,'Vegetables','vegetables.jpg','Mixed fresh vegetables for regular cooking needs',1,50,45.00,'2025-05-10 06:31:00'),(313,'Kids Bicycle','kids_bicycle_v2.jpg','Updated kids bicycle',1,5,5100.00,'2025-05-10 06:32:00'),(314,'Electric Kettle','electric_kettle.jpg','Convenient appliance for boiling water quickly',1,20,999.00,'2025-05-10 06:33:00'),(315,'Notebooks Pack','notebooks.jpg','Set of ruled notebooks for school or office use',1,100,300.00,'2025-05-10 06:34:00'),(316,'Dining Table','dining_table.jpg','Sturdy wooden dining table ideal for families',1,3,8500.00,'2025-05-10 06:35:00'),(317,'Curtains Set','curtains.jpg','Decorative curtains set for home interiors',1,25,1200.00,'2025-05-10 06:36:00'),(318,'Toiletries Pack','toiletries.jpg','Daily essentials including soap, shampoo, and toothpaste',1,100,500.00,'2025-05-10 06:37:00'),(319,'Mixer Grinder','mixer_grinder.jpg','Multipurpose kitchen appliance for blending and grinding',1,15,2800.00,'2025-05-10 06:38:00'),(320,'Fitness Dumbbells','dumbbells.jpg','Adjustable dumbbells suitable for home workouts',1,20,1500.00,'2025-05-10 06:39:00'),(321,'Mattress','mattress.jpg','Comfortable foam mattress for quality sleep',1,10,5200.00,'2025-05-10 06:40:00'),(322,'Ceiling Fan','ceiling_fan.jpg','Energy-efficient ceiling fan with modern design',1,20,1800.00,'2025-05-10 06:41:00'),(323,'LED Bulb Set','led_bulbs.jpg','Pack of long-lasting energy-saving LED bulbs',1,100,800.00,'2025-05-10 06:42:00'),(324,'Water Bottle','bottle.jpg','Reusable plastic water bottle for daily hydration',1,200,120.00,'2025-05-10 06:43:00'),(325,'Laptop Stand','laptop_stand.jpg','Ergonomic stand to elevate laptop for comfortable viewing',1,50,750.00,'2025-05-10 06:44:00'),(326,'Cooking Oil','cooking_oil.jpg','Refined cooking oil suitable for everyday use',1,100,150.00,'2025-05-10 06:45:00'),(327,'Washing Powder','washing_powder.jpg','Effective detergent powder for all fabrics',1,75,350.00,'2025-05-10 06:46:00'),(328,'Garden Tools Kit','garden_tools.jpg','Set of tools for basic home gardening tasks',1,20,1400.00,'2025-05-10 06:47:00'),(329,'Pillows','pillows.jpg','Soft cotton pillows suitable for all bed types',1,60,250.00,'2025-05-10 06:48:00'),(331,'Home Decor Lights','decor_lights.jpg','String lights for decoration during events or festivals',1,80,950.00,'2025-05-10 06:50:00'),(332,'Kids Bicyced','kids_bicycle_v2.jpg','Updated description for kids bicycle',1,5,508.00,'2025-05-10 06:51:00'),(333,'Plastic Storage Box','storage_box.jpg','Multipurpose storage container with lid',1,75,180.00,'2025-05-10 06:52:00'),(334,'Hand Sanitizer','sanitizer.jpg','Alcohol-based hand sanitizer for hygiene',1,200,110.00,'2025-05-10 06:53:00'),(335,'Extension Cord','extension_cord.jpg','5-socket extension board with surge protection',1,40,450.00,'2025-05-10 06:54:00'),(336,'USB Flash Drive','usb.jpg','32GB USB flash drive for portable storage',1,100,420.00,'2025-05-10 06:55:00'),(337,'Wall Paint','wall_paint.jpg','Interior wall paint with smooth finish',1,30,2200.00,'2025-05-10 06:56:00'),(338,'Rechargeable Torch','torch.jpg','Long-lasting LED torch with rechargeable battery',1,50,850.00,'2025-05-10 06:57:00'),(339,'Yoga Mat','yoga_mat.jpg','Non-slip yoga mat for home workouts and stretching',1,60,750.00,'2025-05-10 06:58:00'),(340,'Mobile Charger','mobile_charger.jpg','Fast-charging adapter compatible with all smartphones',1,100,399.00,'2025-05-10 06:59:00'),(341,'Premium Basmati Rice','basmati.jpg','Long-grain aged rice for premium customers',10,100,120.00,'2025-06-29 03:47:14');
+INSERT INTO `commodity` VALUES (311,'Fruits','fruits.jpg','edgeyhey',1,50,70.00,'2025-05-10 06:30:00'),(312,'Vegetables','vegetables.jpg','Mixed fresh vegetables for regular cooking needs',1,50,45.00,'2025-05-10 06:31:00'),(313,'Kids Bicycle','kids_bicycle_v2.jpg','Updated kids bicycle',1,5,5100.00,'2025-05-10 06:32:00'),(314,'Electric Kettle','electric_kettle.jpg','Convenient appliance for boiling water quickly',1,20,999.00,'2025-05-10 06:33:00'),(315,'Notebooks Pack','notebooks.jpg','Set of ruled notebooks for school or office use',1,100,300.00,'2025-05-10 06:34:00'),(316,'Dining Table','dining_table.jpg','Sturdy wooden dining table ideal for families',1,3,8500.00,'2025-05-10 06:35:00'),(317,'Curtains Set','curtains.jpg','Decorative curtains set for home interiors',1,25,1200.00,'2025-05-10 06:36:00'),(318,'Toiletries Pack','toiletries.jpg','Daily essentials including soap, shampoo, and toothpaste',1,100,500.00,'2025-05-10 06:37:00'),(319,'Mixer Grinder','mixer_grinder.jpg','Multipurpose kitchen appliance for blending and grinding',1,15,2800.00,'2025-05-10 06:38:00'),(320,'Fitness Dumbbells','dumbbells.jpg','Adjustable dumbbells suitable for home workouts',1,20,1500.00,'2025-05-10 06:39:00'),(321,'Mattress','mattress.jpg','Comfortable foam mattress for quality sleep',1,10,5200.00,'2025-05-10 06:40:00'),(322,'Ceiling Fan','ceiling_fan.jpg','Energy-efficient ceiling fan with modern design',1,20,1800.00,'2025-05-10 06:41:00'),(323,'LED Bulb Set','led_bulbs.jpg','Pack of long-lasting energy-saving LED bulbs',1,100,800.00,'2025-05-10 06:42:00'),(324,'Water Bottle','bottle.jpg','Reusable plastic water bottle for daily hydration',1,200,120.00,'2025-05-10 06:43:00'),(325,'Laptop Stand','laptop_stand.jpg','Ergonomic stand to elevate laptop for comfortable viewing',1,50,750.00,'2025-05-10 06:44:00'),(326,'Cooking Oil','cooking_oil.jpg','Refined cooking oil suitable for everyday use',1,100,150.00,'2025-05-10 06:45:00'),(327,'Washing Powder','washing_powder.jpg','Effective detergent powder for all fabrics',1,75,350.00,'2025-05-10 06:46:00'),(328,'Garden Tools Kit','garden_tools.jpg','Set of tools for basic home gardening tasks',1,20,1400.00,'2025-05-10 06:47:00'),(329,'Pillows','pillows.jpg','Soft cotton pillows suitable for all bed types',1,60,250.00,'2025-05-10 06:48:00'),(331,'Home Decor Lights','decor_lights.jpg','String lights for decoration during events or festivals',1,80,950.00,'2025-05-10 06:50:00'),(332,'Kids Bicyced','kids_bicycle_v2.jpg','Updated description for kids bicycle',1,5,508.00,'2025-05-10 06:51:00'),(333,'Plastic Storage Box','storage_box.jpg','Multipurpose storage container with lid',1,75,180.00,'2025-05-10 06:52:00'),(334,'Hand Sanitizer','sanitizer.jpg','Alcohol-based hand sanitizer for hygiene',1,200,110.00,'2025-05-10 06:53:00'),(335,'Extension Cord','extension_cord.jpg','5-socket extension board with surge protection',1,40,450.00,'2025-05-10 06:54:00'),(336,'USB Flash Drive','usb.jpg','32GB USB flash drive for portable storage',1,100,420.00,'2025-05-10 06:55:00'),(337,'Wall Paint','wall_paint.jpg','Interior wall paint with smooth finish',1,30,2200.00,'2025-05-10 06:56:00'),(338,'Rechargeable Torch','torch.jpg','Long-lasting LED torch with rechargeable battery',1,50,850.00,'2025-05-10 06:57:00'),(339,'Yoga Mat','yoga_mat.jpg','Non-slip yoga mat for home workouts and stretching',1,60,750.00,'2025-05-10 06:58:00'),(340,'Mobile Charger','mobile_charger.jpg','Fast-charging adapter compatible with all smartphones',1,100,399.00,'2025-05-10 06:59:00'),(341,'Premium Basmati Rice','basmati.jpg','Long-grain aged rice for premium customers',10,100,120.00,'2025-06-29 03:47:14'),(342,'Premium Basmati Rice2','commodity_fb13a00eb4bd49dbb9d0d325709b235b.png','Long-grain aged rice for premium customers',10,100,120.00,'2025-07-22 23:36:38');
 /*!40000 ALTER TABLE `commodity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -207,6 +207,34 @@ INSERT INTO `customer_auth` VALUES (1,33,'$2b$12$examplehashedpasswordhere','202
 UNLOCK TABLES;
 
 --
+-- Table structure for table `delivery_details`
+--
+
+DROP TABLE IF EXISTS `delivery_details`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `delivery_details` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `status` enum('Picked Up','In Transit','Retained','Delivered') NOT NULL,
+  `status_time` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_delivery_order_id` (`order_id`),
+  CONSTRAINT `fk_delivery_order_id` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `delivery_details`
+--
+
+LOCK TABLES `delivery_details` WRITE;
+/*!40000 ALTER TABLE `delivery_details` DISABLE KEYS */;
+INSERT INTO `delivery_details` VALUES (1,177730,'Picked Up','2024-01-27 10:00:00'),(2,177730,'In Transit','2024-01-28 10:05:00'),(3,177730,'Retained','2024-01-28 11:32:00'),(4,177730,'Delivered','2024-01-28 12:00:00'),(5,318126,'Picked Up','2024-02-01 09:30:00'),(6,318126,'In Transit','2024-02-02 13:15:00'),(7,318126,'Retained','2024-02-02 15:00:00'),(8,318126,'Delivered','2024-02-02 18:45:00'),(9,4140411,'Picked Up','2024-03-05 08:00:00'),(10,4140411,'In Transit','2024-03-06 10:30:00'),(11,4140411,'Delivered','2024-03-06 13:00:00'),(12,8304319,'Picked Up','2024-04-10 14:20:00'),(13,8304319,'In Transit','2024-04-11 09:00:00'),(14,8304319,'Delivered','2024-04-11 16:00:00'),(15,10561754,'Picked Up','2024-05-12 11:00:00'),(16,10561754,'In Transit','2024-05-13 08:45:00'),(17,10561754,'Retained','2024-05-13 09:10:00'),(18,19042874,'Picked Up','2024-06-01 07:30:00'),(19,19042874,'In Transit','2024-06-02 10:00:00'),(20,32549917,'Picked Up','2024-07-15 15:00:00'),(21,32549917,'In Transit','2024-07-16 10:00:00'),(22,32549917,'Delivered','2024-07-16 18:00:00');
+/*!40000 ALTER TABLE `delivery_details` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `delivery_failure_reasons`
 --
 
@@ -246,7 +274,7 @@ CREATE TABLE `documents` (
   PRIMARY KEY (`doc_id`),
   KEY `fk_order_id` (`order_id`),
   CONSTRAINT `fk_order_id` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=90 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -255,7 +283,7 @@ CREATE TABLE `documents` (
 
 LOCK TABLES `documents` WRITE;
 /*!40000 ALTER TABLE `documents` DISABLE KEYS */;
-INSERT INTO `documents` VALUES (79,10561754,'10561754_commodities_f389380e2f8543aea7961a04434a1c01.jpg','2025-05-26 16:43:59','commodities'),(80,19042874,'19042874_commodities_56d3a9cd91d644918953c3f847185fa7.jpg','2025-05-26 16:49:17','commodities'),(81,19042874,'19042874_commodities_5941a41d10144f03af3dcef1f02c6088.jpg','2025-05-26 16:56:54','commodities'),(82,32549917,'32549917_commodities_326a0e63a04b496fa282c969da3fd297.jpg','2025-05-26 17:03:12','commodities'),(83,32549917,'32549917_commodities_ba0e48ff946743b4bda544f344221384.jpg','2025-05-26 17:31:07','commodities'),(84,38471864,'38471864_commodities_e27197809dd5495a868742bef5913f4b.jpg','2025-05-29 02:08:59','commodities'),(85,42465129,'42465129_commodities_4b62adf1ce394b94b24f50707e06ed22.jpg','2025-05-29 17:13:03','commodities'),(86,42465129,'42465129_commodities_29842e15b3044a96950267f108bf2c66.jpg','2025-05-29 17:41:32','commodities'),(87,4140411,'4140411_commodities_2c178795ad2b4967a62eba56d38ee43b.png','2025-06-01 14:34:31','commodities'),(88,50093252,'50093252_commodities_30d71a83df784cb08d56fab99e0468ae.png','2025-06-29 14:51:34','commodities'),(89,177730,'177730_commodities_c533487f5a38445caa4bfa7018067219.png','2025-06-30 15:31:08','commodities');
+INSERT INTO `documents` VALUES (79,10561754,'10561754_commodities_f389380e2f8543aea7961a04434a1c01.jpg','2025-05-26 16:43:59','commodities'),(80,19042874,'19042874_commodities_56d3a9cd91d644918953c3f847185fa7.jpg','2025-05-26 16:49:17','commodities'),(81,19042874,'19042874_commodities_5941a41d10144f03af3dcef1f02c6088.jpg','2025-05-26 16:56:54','commodities'),(82,32549917,'32549917_commodities_326a0e63a04b496fa282c969da3fd297.jpg','2025-05-26 17:03:12','commodities'),(83,32549917,'32549917_commodities_ba0e48ff946743b4bda544f344221384.jpg','2025-05-26 17:31:07','commodities'),(84,38471864,'38471864_commodities_e27197809dd5495a868742bef5913f4b.jpg','2025-05-29 02:08:59','commodities'),(85,42465129,'42465129_commodities_4b62adf1ce394b94b24f50707e06ed22.jpg','2025-05-29 17:13:03','commodities'),(86,42465129,'42465129_commodities_29842e15b3044a96950267f108bf2c66.jpg','2025-05-29 17:41:32','commodities'),(87,4140411,'4140411_commodities_2c178795ad2b4967a62eba56d38ee43b.png','2025-06-01 14:34:31','commodities'),(88,50093252,'50093252_commodities_30d71a83df784cb08d56fab99e0468ae.png','2025-06-29 14:51:34','commodities'),(89,177730,'177730_commodities_c533487f5a38445caa4bfa7018067219.png','2025-06-30 15:31:08','commodities'),(90,48123420,'48123420_commodities_da927c0b580241c380f06a22f3861a5f.png','2025-07-20 02:19:10','commodities'),(91,48123420,'48123420_commodities_ad07d5ac037342059001f35256ed7e9f.png','2025-07-20 02:19:10','commodities'),(92,48379489,'48379489_commodities_9e9949c17d10480c8a084d1d26c5b861.png','2025-07-20 12:34:16','commodities'),(93,48379489,'48379489_commodities_961b38d070d34758bd3e9365a77b55e1.png','2025-07-20 12:35:21','commodities'),(94,8304319,'8304319_commodities_f9a2e97d4b71497fa3fe74baa880441b.jpg','2025-07-20 12:42:26','commodities'),(95,8304319,'8304319_commodities_dc7bf045818946c4b2a0b4b43bff84c8.png','2025-07-20 12:42:26','commodities'),(96,8304319,'8304319_commodities_c9fdb606788c4aaabafdad6163a89f2d.png','2025-07-20 12:42:26','commodities'),(97,46318748,'46318748_commodities_16d52acdac874178b9fbfc163efffb58.jpg','2025-07-20 12:43:28','commodities');
 /*!40000 ALTER TABLE `documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -306,7 +334,7 @@ CREATE TABLE `order_items` (
   CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`commodity_id`) REFERENCES `commodity` (`commodity_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +343,7 @@ CREATE TABLE `order_items` (
 
 LOCK TABLES `order_items` WRITE;
 /*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
-INSERT INTO `order_items` VALUES (102,42465129,313,2,10400.00,'2025-05-29 17:39:35',NULL),(103,42465129,313,2,10400.00,'2025-05-29 17:40:29',NULL),(104,42465129,313,2,10400.00,'2025-05-29 17:40:43',NULL),(105,42465129,313,2,10400.00,'2025-05-29 17:41:02',NULL),(106,42465129,312,2,90.00,'2025-05-29 17:41:34',NULL),(107,42465129,312,2,90.00,'2025-05-29 17:41:36',NULL),(108,42465129,312,2,90.00,'2025-05-29 17:41:44',NULL),(109,42465129,312,2,90.00,'2025-05-29 17:42:11',NULL),(110,4140411,314,2,1998.00,'2025-06-01 14:34:35',NULL),(111,4140411,314,2,1998.00,'2025-06-01 14:34:47',NULL),(112,50023588,311,3,360.00,'2025-06-22 10:12:09',1),(113,50023588,312,2,120.00,'2025-06-22 10:12:09',1),(114,50023588,311,3,360.00,'2025-06-22 10:12:27',1),(115,50023588,312,2,120.00,'2025-06-22 10:12:27',1),(116,50093252,313,2,10200.00,'2025-06-29 14:51:39',1),(117,177730,313,2,10200.00,'2025-06-30 15:31:12',1);
+INSERT INTO `order_items` VALUES (102,42465129,313,2,10400.00,'2025-05-29 17:39:35',NULL),(103,42465129,313,2,10400.00,'2025-05-29 17:40:29',NULL),(104,42465129,313,2,10400.00,'2025-05-29 17:40:43',NULL),(105,42465129,313,2,10400.00,'2025-05-29 17:41:02',NULL),(106,42465129,312,2,90.00,'2025-05-29 17:41:34',NULL),(107,42465129,312,2,90.00,'2025-05-29 17:41:36',NULL),(108,42465129,312,2,90.00,'2025-05-29 17:41:44',NULL),(109,42465129,312,2,90.00,'2025-05-29 17:42:11',NULL),(110,4140411,314,2,1998.00,'2025-06-01 14:34:35',NULL),(111,4140411,314,2,1998.00,'2025-06-01 14:34:47',NULL),(112,50023588,311,3,360.00,'2025-06-22 10:12:09',1),(113,50023588,312,2,120.00,'2025-06-22 10:12:09',1),(114,50023588,311,3,360.00,'2025-06-22 10:12:27',1),(115,50023588,312,2,120.00,'2025-06-22 10:12:27',1),(116,50093252,313,2,10200.00,'2025-06-29 14:51:39',1),(117,177730,313,2,10200.00,'2025-06-30 15:31:12',1),(118,48123420,311,2,140.00,'2025-07-20 02:20:31',10),(119,48123420,313,1,5100.00,'2025-07-20 02:20:31',10),(120,48379489,312,2,90.00,'2025-07-20 12:35:28',10),(121,8304319,312,4,180.00,'2025-07-20 12:42:33',10),(122,46318748,312,2,90.00,'2025-07-20 12:43:30',10);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -355,7 +383,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (177730,5,31,1,'In Transit','billing','2025-06-30 15:30:17','2025-06-30 15:31:12',NULL,NULL),(318126,5,31,1,'In Transit','commodity','2025-05-26 17:30:31','2025-05-26 17:30:31',NULL,NULL),(4140411,5,31,1,'In Transit','billing','2025-06-01 14:34:14','2025-06-01 14:34:35',NULL,NULL),(10561754,5,31,1,'In Transit','commodity','2025-05-26 16:40:56','2025-05-26 16:40:56',NULL,NULL),(19042874,5,31,1,'In Transit','commodity','2025-05-26 16:49:04','2025-05-26 16:49:04',NULL,NULL),(32549917,5,31,1,'In Transit','commodity','2025-05-26 17:02:54','2025-05-26 17:02:54',NULL,NULL),(36559339,5,31,1,'In Transit','order','2025-05-20 17:06:55','2025-05-20 17:06:55',NULL,NULL),(37405863,5,31,1,'In Transit','commodity','2025-06-29 07:07:40','2025-06-29 07:07:40',NULL,NULL),(38442863,31,5,1,'In Transit','commodity','2025-06-29 07:08:44','2025-06-29 07:08:44',NULL,NULL),(38471864,5,31,1,'In Transit','commodity','2025-05-29 02:08:47','2025-05-29 02:08:47',NULL,NULL),(42149377,5,31,1,'In Transit','order','2025-05-20 17:12:14','2025-05-20 17:12:14',NULL,NULL),(42465129,31,5,1,'In Transit','billing','2025-05-29 17:12:46','2025-06-01 16:47:50',NULL,NULL),(44539641,31,5,1,'In Transit','commodity','2025-06-29 07:14:53','2025-06-29 07:14:53',NULL,NULL),(46318748,5,31,1,'In Transit','commodity','2025-06-29 07:16:31','2025-06-29 07:16:31',NULL,NULL),(48171109,5,31,1,'In Transit','commodity','2025-05-20 17:18:17','2025-05-20 17:18:17',NULL,NULL),(48379489,31,5,1,'In Transit','commodity','2025-06-29 07:18:37','2025-06-29 07:18:37',NULL,NULL),(49180128,5,31,1,'In Transit','commodity','2025-05-20 17:19:18','2025-05-20 17:19:18',NULL,NULL),(49524049,5,31,1,'In Transit','commodity','2025-06-22 10:19:52','2025-06-22 10:19:52',NULL,NULL),(50023588,5,31,1,'In Transit','billing','2025-05-20 17:20:02','2025-06-22 10:12:09',NULL,NULL),(50089505,5,31,1,'In Transit','commodity','2025-06-22 10:20:08','2025-06-22 10:20:08',NULL,NULL),(50093252,5,31,1,'In Transit','billing','2025-06-29 07:20:09','2025-06-30 15:15:33',NULL,NULL),(51113761,5,31,1,'In Transit','commodity','2025-06-22 10:21:11','2025-06-22 10:21:11',NULL,NULL);
+INSERT INTO `orders` VALUES (177730,5,31,1,'In Transit','billing','2025-06-30 15:30:17','2025-06-30 15:31:12',NULL,NULL),(318126,5,31,1,'In Transit','commodity','2025-05-26 17:30:31','2025-05-26 17:30:31',NULL,NULL),(4140411,5,31,1,'In Transit','billing','2025-06-01 14:34:14','2025-06-01 14:34:35',NULL,NULL),(8304319,5,31,10,'In Transit','billing','2025-07-20 12:38:30','2025-07-20 12:42:33',NULL,NULL),(10561754,5,31,1,'In Transit','commodity','2025-05-26 16:40:56','2025-05-26 16:40:56',NULL,NULL),(19042874,5,31,1,'In Transit','commodity','2025-05-26 16:49:04','2025-05-26 16:49:04',NULL,NULL),(32549917,5,31,1,'In Transit','commodity','2025-05-26 17:02:54','2025-05-26 17:02:54',NULL,NULL),(36559339,5,31,1,'In Transit','order','2025-05-20 17:06:55','2025-05-20 17:06:55',NULL,NULL),(37405863,5,31,1,'In Transit','commodity','2025-06-29 07:07:40','2025-06-29 07:07:40',NULL,NULL),(38442863,31,5,1,'In Transit','commodity','2025-06-29 07:08:44','2025-06-29 07:08:44',NULL,NULL),(38471864,5,31,1,'In Transit','commodity','2025-05-29 02:08:47','2025-05-29 02:08:47',NULL,NULL),(42149377,5,31,1,'In Transit','order','2025-05-20 17:12:14','2025-05-20 17:12:14',NULL,NULL),(42465129,31,5,1,'In Transit','billing','2025-05-29 17:12:46','2025-06-01 16:47:50',NULL,NULL),(44539641,31,5,1,'In Transit','commodity','2025-06-29 07:14:53','2025-06-29 07:14:53',NULL,NULL),(46318748,5,31,1,'In Transit','billing','2025-06-29 07:16:31','2025-07-20 12:43:30',NULL,NULL),(48123420,5,31,1,'Picked Up','billing','2025-07-20 02:18:12','2025-07-23 15:50:37',NULL,NULL),(48171109,5,31,1,'In Transit','commodity','2025-05-20 17:18:17','2025-05-20 17:18:17',NULL,NULL),(48379489,31,5,1,'In Transit','billing','2025-06-29 07:18:37','2025-07-20 12:35:28',NULL,NULL),(49180128,5,31,1,'In Transit','commodity','2025-05-20 17:19:18','2025-05-20 17:19:18',NULL,NULL),(49524049,5,31,1,'In Transit','commodity','2025-06-22 10:19:52','2025-06-22 10:19:52',NULL,NULL),(50023588,5,31,1,'In Transit','billing','2025-05-20 17:20:02','2025-06-22 10:12:09',NULL,NULL),(50089505,5,31,1,'In Transit','commodity','2025-06-22 10:20:08','2025-06-22 10:20:08',NULL,NULL),(50093252,5,31,1,'In Transit','billing','2025-06-29 07:20:09','2025-06-30 15:15:33',NULL,NULL),(51113761,5,31,1,'In Transit','commodity','2025-06-22 10:21:11','2025-06-22 10:21:11',NULL,NULL);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -409,7 +437,7 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`employeeid`),
   UNIQUE KEY `employee_email` (`employee_email`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -418,7 +446,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Ranjith','ranji@example.com','83005809','Welcome123',NULL,0,'2025-01-21 18:04:23'),(10,'Karthick','Karthick@example.com','59876543','Welcome123',NULL,0,'2025-01-26 15:10:47'),(23,'Karthick3','karthic2@example.com','59376543','Welcome123','karthick.jpg',0,'2025-06-29 03:27:19');
+INSERT INTO `users` VALUES (1,'Ranjith','ranji@example.com','83005809','Welcome123',NULL,0,'2025-01-21 18:04:23'),(10,'Karthick','Karthick@example.com','59876543','Welcome123',NULL,0,'2025-01-26 15:10:47'),(23,'Karthick3','karthic2@example.com','59376543','Welcome123','karthick.jpg',0,'2025-06-29 03:27:19'),(24,'Karthick3','karthic12@example.com','59376545','Welcome123',NULL,0,'2025-07-22 17:53:02'),(25,'Karthick3','karthic172@example.com','59376525','Welcome123',NULL,0,'2025-07-22 17:53:39'),(27,'Karthick3','karthifc172@example.com','59376523','Welcome123',NULL,1,'2025-07-22 17:56:35'),(28,'Karthick3','karthifca172@example.com','59376521','Welcome123',NULL,1,'2025-07-23 01:03:09');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2454,15 +2482,20 @@ BEGIN
 
     SET offsetVal = (inPageNumber - 1) * inPageSize;
 
+    -- Count only orders where stage is NOT 'billing'
     SELECT 
         COUNT(*) INTO totalRecords
     FROM 
         orders o
     LEFT JOIN 
-        moving_bazaar.billing b ON o.order_id = b.order_id;
+        moving_bazaar.billing b ON o.order_id = b.order_id
+    WHERE 
+        o.stage != 'billing';
 
+    -- Return the total records
     SELECT totalRecords AS totalRecords;
 
+    -- Fetch paginated data if records exist
     IF totalRecords > 0 THEN
         SELECT 
             o.order_id AS orderId,
@@ -2472,8 +2505,12 @@ BEGIN
             orders o
         LEFT JOIN 
             moving_bazaar.billing b ON o.order_id = b.order_id
-        ORDER BY o.updated_at DESC
-        LIMIT offsetVal, inPageSize;
+        WHERE 
+            o.stage != 'billing'
+        ORDER BY 
+            o.updated_at DESC
+        LIMIT 
+            offsetVal, inPageSize;
     ELSE
         SELECT NULL;
     END IF;
@@ -2903,12 +2940,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getOrderDetailsByStatus`(
     IN inEmployeeId INT
 )
 BEGIN
-    DECLARE offsetVal INT;
-    DECLARE total INT;
+    DECLARE offsetVal INT DEFAULT 0;
+    DECLARE total INT DEFAULT 0;
+
+    -- Safeguard for pagination
+    IF inPageNumber IS NULL OR inPageNumber <= 0 THEN
+        SET inPageNumber = 1;
+    END IF;
+
+    IF inPageSize IS NULL OR inPageSize <= 0 THEN
+        SET inPageSize = 10;
+    END IF;
 
     SET offsetVal = (inPageNumber - 1) * inPageSize;
 
-    -- Step 1: Count
+    -- Step 1: Count total matching records
     SELECT COUNT(*) INTO total
     FROM orders o
     JOIN moving_bazaar.customer sender ON o.sender_id = sender.customer_id
@@ -2918,11 +2964,12 @@ BEGIN
         (inOrderStatus IS NULL OR inOrderStatus = '' OR o.order_status = inOrderStatus)
         AND (inOrderId IS NULL OR inOrderId = '' OR o.order_id LIKE CONCAT('%', inOrderId, '%'))
         AND (inDeliveryDate IS NULL OR b.delivery_date = inDeliveryDate)
-        AND (inEmployeeId IS NULL OR o.created_by = inEmployeeId);  -- Replace `created_by` if different
+        AND (inEmployeeId IS NULL OR o.created_by = inEmployeeId);
 
+    -- Return total record count
     SELECT total AS totalRecords;
 
-    -- Step 2: Paginated data
+    -- Step 2: Return paginated result if records found
     IF total > 0 THEN
         SELECT 
             o.order_id AS orderId,
@@ -2944,11 +2991,24 @@ BEGIN
             (inOrderStatus IS NULL OR inOrderStatus = '' OR o.order_status = inOrderStatus)
             AND (inOrderId IS NULL OR inOrderId = '' OR o.order_id LIKE CONCAT('%', inOrderId, '%'))
             AND (inDeliveryDate IS NULL OR b.delivery_date = inDeliveryDate)
-            AND (inEmployeeId IS NULL OR o.created_by = inEmployeeId)  -- Replace accordingly
+            AND (inEmployeeId IS NULL OR o.created_by = inEmployeeId)
         ORDER BY b.delivery_date DESC
         LIMIT offsetVal, inPageSize;
     ELSE
-        SELECT NULL;
+        -- Return empty result with defined columns to match schema
+        SELECT 
+            NULL AS orderId,
+            NULL AS orderStatus,
+            NULL AS senderName,
+            NULL AS receiverName,
+            NULL AS deliveryDate,
+            NULL AS senderAddressLine1,
+            NULL AS senderAddressLine2,
+            NULL AS senderCity,
+            NULL AS receiverAddressLine1,
+            NULL AS receiverAddressLine2,
+            NULL AS receiverCity
+        WHERE FALSE;
     END IF;
 END ;;
 DELIMITER ;
@@ -2989,6 +3049,31 @@ BEGIN
         WHERE 
             order_items.order_id = p_order_id;
     END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `getOrderDocuments` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getOrderDocuments`(
+    IN input_order_id INT,
+    IN input_category VARCHAR(50)
+)
+BEGIN
+    SELECT path 
+    FROM moving_bazaar.documents 
+    WHERE order_id = input_order_id 
+      AND catagory = input_category;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3183,6 +3268,77 @@ BEGIN
     WHERE 
         o.order_id = p_order_id
         AND o.created_by = p_employeeid;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `GetordersummaryDetails` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetordersummaryDetails`(IN input_order_id INT)
+BEGIN
+    -- Delivery details: sender and receiver
+    SELECT 
+        o.order_id,
+        
+        -- Estimated delivery: using order created date as example (custom logic can be added)
+        DATE_FORMAT(o.created_at, '%b %d') AS start_date,
+        DATE_FORMAT(DATE_ADD(o.created_at, INTERVAL 1 DAY), '%b %d') AS end_date,
+
+        -- Sender info
+        cs.store_name AS pickoff,
+
+        -- Receiver info
+        cr.store_name AS receiver_name
+
+    FROM orders o
+    LEFT JOIN customer cs ON o.sender_id = cs.customer_id
+    LEFT JOIN customer cr ON o.receiver_id = cr.customer_id
+    WHERE o.order_id = input_order_id;
+    
+	SELECT status,status_time
+	FROM moving_bazaar.delivery_details 
+	WHERE order_id = input_order_id;
+
+    -- Order summary: itemized details
+    SELECT 
+        cm.item_name AS item,
+        oi.quantity,
+        cm.price AS unit_price,
+        oi.total_price
+    FROM order_items oi
+    JOIN commodity cm ON oi.commodity_id = cm.commodity_id
+    WHERE oi.order_id = input_order_id;
+    
+	SELECT path 
+	FROM moving_bazaar.documents 
+	WHERE order_id = input_order_id 
+	  AND catagory = "commodities";
+		
+    
+    -- Billing summary
+    SELECT 
+        b.total_amount_paid AS total,
+        b.outstanding_amount_paid AS outstanding_balance,
+        b.grand_total,
+        c.store_name AS bill_to_name,
+        c.email AS bill_to_email,
+        c.phone_number AS bill_to_phone,
+        CONCAT(c.address_line1, ', ', c.address_line2, ', ', c.city) AS bill_to_address,
+        CONCAT('Amount to be paid by the Sender - ', c.store_name) AS note
+    FROM billing b
+    JOIN orders o ON o.order_id = b.order_id
+    JOIN customer c ON o.sender_id = c.customer_id
+    WHERE b.order_id = input_order_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -3683,25 +3839,26 @@ BEGIN
         SELECT CONCAT('SQL Error: ', message) AS error_message;
     END;
 
-    -- Check if the customer exists
-IF EXISTS (SELECT 1 FROM customer WHERE phone_number = p_phone_number) THEN
-    SELECT 
-        customer_id AS customerId,
-        store_name AS storeName,
-        email AS email,
-        phone_number AS phoneNumber,
-        whatsapp_number AS whatsappNumber,
-        address_line1 AS addressLine1,
-        address_line2 AS addressLine2,
-        city AS city,
-        outstanding_price AS outstandingPrice,
-        created_at AS createdAt
-    FROM customer
-    WHERE phone_number = p_phone_number;
-ELSE
-    SELECT 'Error: Customer not found.' AS message;
-END IF;
-
+    -- Check if any matching customer exists using LIKE
+    IF EXISTS (
+        SELECT 1 FROM customer WHERE phone_number LIKE CONCAT('%', p_phone_number, '%')
+    ) THEN
+        SELECT 
+            customer_id AS customerId,
+            store_name AS storeName,
+            email AS email,
+            phone_number AS phoneNumber,
+            whatsapp_number AS whatsappNumber,
+            address_line1 AS addressLine1,
+            address_line2 AS addressLine2,
+            city AS city,
+            outstanding_price AS outstandingPrice,
+            created_at AS createdAt
+        FROM customer
+        WHERE phone_number LIKE CONCAT('%', p_phone_number, '%');
+    ELSE
+        SELECT 'Error: Customer not found.' AS message;
+    END IF;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -4170,7 +4327,7 @@ BEGIN
     WHERE employee_phone_number = p_phone_number;
 
     IF phone_exists > 0 THEN
-        SELECT 'Phone number already exists.' AS message;
+        SELECT 'Phone number already exists.' AS message, NULL AS employee_id;
     ELSE
         -- Insert the new employee
         INSERT INTO users (
@@ -4192,7 +4349,7 @@ BEGIN
             NOW()
         );
 
-        SELECT 'Employee successfully inserted.' AS message;
+        SELECT LAST_INSERT_ID() AS employee_id, 'Employee successfully inserted.' AS message;
     END IF;
 END ;;
 DELIMITER ;
@@ -4932,6 +5089,47 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `SP_GetBillDetailsByStatus` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GetBillDetailsByStatus`(
+    IN p_payment_status VARCHAR(20)
+)
+BEGIN
+    SELECT 
+        o.order_id, 
+        c.store_name, 
+        c.phone_number, 
+        c.whatsapp_num, 
+        c.email, 
+        b.total_price, 
+        b.total_amount_paid, 
+        b.outstanding_amount_paid, 
+        b.payment_status, 
+        b.created_at AS bill_created_at, 
+        b.delivery_date,
+        c.city, 
+        b.payment_status,
+        b.created_at AS bill_created_at
+    FROM moving_bazaar.billing b
+    INNER JOIN moving_bazaar.orders o
+        ON b.order_id = o.order_id
+    INNER JOIN moving_bazaar.customer c
+        ON o.sender_id = c.customer_id
+    WHERE b.payment_status = p_payment_status;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `sp_get_invoice_json` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -5029,6 +5227,30 @@ BEGIN
             'note', CONCAT('Amount to be paid by the Sender - ', bill_to_name)
         )
     ) AS invoice_data;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `SP_UpdateBillingStatus` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_UpdateBillingStatus`(
+    IN p_billing_id INT,
+    IN p_new_status VARCHAR(20)
+)
+BEGIN
+    UPDATE moving_bazaar.billing
+    SET payment_status = p_new_status
+    WHERE id = p_billing_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -5806,4 +6028,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-01 20:17:09
+-- Dump completed on 2025-07-23 23:37:13
