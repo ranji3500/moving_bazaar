@@ -327,44 +327,49 @@ def get_commodities():
         return jsonify({"error": str(e)}), 500
 
 
-@admin_bp.route('/update_commodity', methods=['PUT'])  # or use 'POST'
+@admin_bp.route('/insert_commodity', methods=['POST'])
 @jwt_required()
-def update_commodity():
+def insert_commodity():
     try:
-        data = request.get_json()
+        # Extract form data
+        item_name = request.form.get("itemName")
+        description = request.form.get("description")
+        min_order_qty = request.form.get("minOrderQty")
+        max_order_qty = request.form.get("maxOrderQty")
+        price = request.form.get("price")
 
-        if not data:
+        # Extract image file
+        file = request.files.get("itemPhoto")
+        item_photo_filename = None
+
+        if file and file.filename:
+            ext = os.path.splitext(file.filename)[1]
+            unique_filename = f"commodity_{uuid4().hex}{ext}"
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            item_photo_filename = unique_filename
+        else:
             return jsonify({
                 "status": "Failure",
-                "message": "Missing or invalid JSON data. Ensure Content-Type is application/json"
+                "message": "Image (itemPhoto) is required"
             }), 400
 
-        # Required fields
-        commodity_id = data.get("commodityId")
-        item_name = data.get("itemName")
-        item_photo = data.get("itemPhoto")
-        description = data.get("description")
-        min_order_qty = data.get("minOrderQty")
-        max_order_qty = data.get("maxOrderQty")
-        new_price = data.get("price")
-
-        # Validate input
-        if not all([commodity_id, item_name, item_photo, description, min_order_qty, max_order_qty, new_price]):
+        # Validate required fields
+        required = [item_name, description, min_order_qty, max_order_qty, price]
+        if not all(required):
             return jsonify({
                 "status": "Failure",
                 "message": "All fields are required"
             }), 400
 
-        # Call stored procedure
-        procedure_name = "edit_commodity"
+        procedure_name = "insert_commodity"
         params = (
-            int(commodity_id),
             item_name,
-            item_photo,
+            item_photo_filename,
             description,
             int(min_order_qty),
             int(max_order_qty),
-            float(new_price)
+            float(price)
         )
 
         result = db.insertall_using_procedure(procedure_name, params)
@@ -375,10 +380,11 @@ def update_commodity():
                 "message": "No response from stored procedure"
             }), 500
 
-        response_data = result[0]  # Expected: [{'Status': 'Success', 'Message': '...'}]
+        message = result[0].get("message") or result[0].get("error_message", "Unknown error")
+
         return jsonify({
-            "status": response_data.get("Status", "Success"),
-            "message": response_data.get("Message", "Operation completed"),
+            "status": "Success" if "inserted" in message.lower() else "Failure",
+            "message": message
         }), 200
 
     except Exception as e:
@@ -386,6 +392,63 @@ def update_commodity():
             "status": "Failure",
             "message": str(e)
         }), 500
+
+
+@admin_bp.route('/update_commodity', methods=['POST'])  # PUT also acceptable
+@jwt_required()
+def update_commodity():
+    try:
+        # Extract form data
+        commodity_id = request.form.get("commodityId")
+        item_name = request.form.get("itemName")
+        description = request.form.get("description")
+        min_order_qty = request.form.get("minOrderQty")
+        max_order_qty = request.form.get("maxOrderQty")
+        price = request.form.get("price")
+
+        # Extract image file (optional)
+        file = request.files.get("itemPhoto")
+        item_photo_filename = None
+
+        if file and file.filename:
+            ext = os.path.splitext(file.filename)[1]
+            unique_filename = f"commodity_{uuid4().hex}{ext}"
+            filepath = os.path.join(upload_folder, unique_filename)
+            file.save(filepath)
+            item_photo_filename = unique_filename
+
+        # Call stored procedure
+        procedure_name = "edit_commodity"
+        params = (
+            int(commodity_id),
+            item_name,
+            item_photo_filename,
+            description,
+            int(min_order_qty),
+            int(max_order_qty),
+            float(price)
+        )
+
+        result = db.insertall_using_procedure(procedure_name, params)
+
+        if not result or not isinstance(result, list) or not result[0]:
+            return jsonify({
+                "status": "Failure",
+                "message": "No response from stored procedure"
+            }), 500
+
+        response_data = result[0]
+        return jsonify({
+            "status": response_data.get("Status", "Success"),
+            "message": response_data.get("Message", "Commodity updated successfully"),
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "Failure",
+            "message": str(e)
+        }), 500
+
 
 @admin_bp.route('/delete_commodity/<int:commodity_id>', methods=['DELETE'])
 @jwt_required()
@@ -468,6 +531,7 @@ def search_commodity():
             "status": "Failure",
             "message": str(e)
         }), 500
+
 
 
 @admin_bp.route('/insert_employee', methods=['POST'])
@@ -647,74 +711,6 @@ def delete_customer(customer_id):
 
     except Exception as e:
         return jsonify({"status": "Failure", "message": str(e)}), 500
-
-
-@admin_bp.route('/insert_commodity', methods=['POST'])
-@jwt_required()
-def insert_commodity():
-    try:
-        # Extract form data
-        item_name = request.form.get("itemName")
-        description = request.form.get("description")
-        min_order_qty = request.form.get("minOrderQty")
-        max_order_qty = request.form.get("maxOrderQty")
-        price = request.form.get("price")
-
-        # Extract image file
-        file = request.files.get("itemPhoto")
-        item_photo_filename = None
-
-        if file and file.filename:
-            ext = os.path.splitext(file.filename)[1]
-            unique_filename = f"commodity_{uuid4().hex}{ext}"
-            filepath = os.path.join(upload_folder, unique_filename)
-            file.save(filepath)
-            item_photo_filename = unique_filename
-        else:
-            return jsonify({
-                "status": "Failure",
-                "message": "Image (itemPhoto) is required"
-            }), 400
-
-        # Validate required fields
-        required = [item_name, description, min_order_qty, max_order_qty, price]
-        if not all(required):
-            return jsonify({
-                "status": "Failure",
-                "message": "All fields are required"
-            }), 400
-
-        procedure_name = "insert_commodity"
-        params = (
-            item_name,
-            item_photo_filename,
-            description,
-            int(min_order_qty),
-            int(max_order_qty),
-            float(price)
-        )
-
-        result = db.insertall_using_procedure(procedure_name, params)
-
-        if not result or not isinstance(result, list) or not result[0]:
-            return jsonify({
-                "status": "Failure",
-                "message": "No response from stored procedure"
-            }), 500
-
-        message = result[0].get("message") or result[0].get("error_message", "Unknown error")
-
-        return jsonify({
-            "status": "Success" if "inserted" in message.lower() else "Failure",
-            "message": message
-        }), 200
-
-    except Exception as e:
-        return jsonify({
-            "status": "Failure",
-            "message": str(e)
-        }), 500
-
 
 @admin_bp.route('/billing_overview', methods=['GET'])
 @jwt_required()
@@ -900,13 +896,19 @@ def delete_employee(emp_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@admin_bp.route('/userorders/<int:employee_id>', methods=['GET'])
+
+@admin_bp.route('/userorders/<int:employee_id>/<status>', methods=['GET'])
 @jwt_required()
-def get_orders_by_employee(employee_id):
+def get_orders_by_employee(employee_id, status):
     try:
         procedure_name = "GetOrdersByEmployeeId"
-        params = (employee_id,)
+
+        # Convert "null" string to actual None (so it maps to SQL NULL)
+        order_status = None if status.lower() == "null" else status
+
+        params = (employee_id, order_status)
         result = db.call_procedure(procedure_name, params)
+
         return jsonify({"Status": "Success", "Orders": result}), 200
     except Exception as e:
         return jsonify({"Status": "Failure", "Message": str(e)}), 500
@@ -1008,3 +1010,18 @@ def get_order_documents():
         logger.error("Error fetching order documents: %s", str(e), exc_info=True)
         return jsonify({"error": str(e)}), 500
 
+@admin_bp.route('/cusorders/<int:cus_id>/<status>', methods=['GET'])
+@jwt_required()
+def get_orders_by_customer(cus_id, status):
+    try:
+        procedure_name = "GetOrdersByCustomerId"
+
+        # Convert "null" string to actual None (so it maps to SQL NULL)
+        order_status = None if status.lower() == "null" else status
+
+        params = (cus_id, order_status)
+        result = db.call_procedure(procedure_name, params)
+
+        return jsonify({"Status": "Success", "Orders": result}), 200
+    except Exception as e:
+        return jsonify({"Status": "Failure", "Message": str(e)}), 500

@@ -82,7 +82,7 @@ CREATE TABLE `billing` (
 
 LOCK TABLES `billing` WRITE;
 /*!40000 ALTER TABLE `billing` DISABLE KEYS */;
-INSERT INTO `billing` VALUES (23,42465129,1,5,41960.00,41960.00,41960.00,41960.00,0.00,'[]','Paid','2025-06-01 14:33:45',NULL,'2025-06-01'),(24,4140411,1,5,3996.00,3996.00,3996.00,3996.00,0.00,'[]','Paid','2025-06-16 15:16:06',NULL,'2025-06-16'),(25,50093252,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-29 15:02:52',NULL,'2025-06-29'),(30,177730,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-30 15:31:39',NULL,'2025-06-30'),(32,48123420,10,31,5240.00,5240.00,5240.00,5240.00,0.00,'[]','Paid','2025-07-20 02:27:15',NULL,'2025-07-20'),(33,8304319,10,5,180.00,180.00,180.00,180.00,0.00,'[]','Paid','2025-07-20 12:42:51',NULL,'2025-07-21');
+INSERT INTO `billing` VALUES (23,42465129,1,5,41960.00,41960.00,41960.00,41960.00,0.00,'[]','Paid','2025-06-01 14:33:45',NULL,'2025-06-01'),(24,4140411,1,5,3996.00,3996.00,3996.00,3996.00,0.00,'[]','Paid','2025-06-16 15:16:06',NULL,'2025-06-16'),(25,50093252,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-29 15:02:52',NULL,'2025-06-29'),(30,177730,1,5,10200.00,10200.00,10200.00,10200.00,0.00,'[]','Paid','2025-06-30 15:31:39',NULL,'2025-06-30'),(32,48123420,10,31,5240.00,5240.00,5240.00,5240.00,0.00,'[]','Paid','2025-07-20 02:27:15',NULL,'2025-07-20'),(33,8304319,10,5,180.00,180.00,180.00,180.00,0.00,'[]','Pending','2025-07-20 12:42:51',NULL,'2025-07-21');
 /*!40000 ALTER TABLE `billing` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -139,7 +139,7 @@ CREATE TABLE `commodity` (
 
 LOCK TABLES `commodity` WRITE;
 /*!40000 ALTER TABLE `commodity` DISABLE KEYS */;
-INSERT INTO `commodity` VALUES (311,'Fruits','fruits.jpg','edgeyhey',1,50,70.00,'2025-05-10 06:30:00'),(312,'Vegetables','vegetables.jpg','Mixed fresh vegetables for regular cooking needs',1,50,45.00,'2025-05-10 06:31:00'),(313,'Kids Bicycle','kids_bicycle_v2.jpg','Updated kids bicycle',1,5,5100.00,'2025-05-10 06:32:00'),(314,'Electric Kettle','electric_kettle.jpg','Convenient appliance for boiling water quickly',1,20,999.00,'2025-05-10 06:33:00'),(315,'Notebooks Pack','notebooks.jpg','Set of ruled notebooks for school or office use',1,100,300.00,'2025-05-10 06:34:00'),(316,'Dining Table','dining_table.jpg','Sturdy wooden dining table ideal for families',1,3,8500.00,'2025-05-10 06:35:00'),(317,'Curtains Set','curtains.jpg','Decorative curtains set for home interiors',1,25,1200.00,'2025-05-10 06:36:00'),(318,'Toiletries Pack','toiletries.jpg','Daily essentials including soap, shampoo, and toothpaste',1,100,500.00,'2025-05-10 06:37:00'),(319,'Mixer Grinder','mixer_grinder.jpg','Multipurpose kitchen appliance for blending and grinding',1,15,2800.00,'2025-05-10 06:38:00'),(320,'Fitness Dumbbells','dumbbells.jpg','Adjustable dumbbells suitable for home workouts',1,20,1500.00,'2025-05-10 06:39:00'),(321,'Mattress','mattress.jpg','Comfortable foam mattress for quality sleep',1,10,5200.00,'2025-05-10 06:40:00'),(322,'Ceiling Fan','ceiling_fan.jpg','Energy-efficient ceiling fan with modern design',1,20,1800.00,'2025-05-10 06:41:00'),(323,'LED Bulb Set','led_bulbs.jpg','Pack of long-lasting energy-saving LED bulbs',1,100,800.00,'2025-05-10 06:42:00'),(324,'Water Bottle','bottle.jpg','Reusable plastic water bottle for daily hydration',1,200,120.00,'2025-05-10 06:43:00'),(325,'Laptop Stand','laptop_stand.jpg','Ergonomic stand to elevate laptop for comfortable viewing',1,50,750.00,'2025-05-10 06:44:00'),(326,'Cooking Oil','cooking_oil.jpg','Refined cooking oil suitable for everyday use',1,100,150.00,'2025-05-10 06:45:00'),(327,'Washing Powder','washing_powder.jpg','Effective detergent powder for all fabrics',1,75,350.00,'2025-05-10 06:46:00'),(328,'Garden Tools Kit','garden_tools.jpg','Set of tools for basic home gardening tasks',1,20,1400.00,'2025-05-10 06:47:00'),(329,'Pillows','pillows.jpg','Soft cotton pillows suitable for all bed types',1,60,250.00,'2025-05-10 06:48:00'),(331,'Home Decor Lights','decor_lights.jpg','String lights for decoration during events or festivals',1,80,950.00,'2025-05-10 06:50:00'),(332,'Kids Bicyced','kids_bicycle_v2.jpg','Updated description for kids bicycle',1,5,508.00,'2025-05-10 06:51:00'),(333,'Plastic Storage Box','storage_box.jpg','Multipurpose storage container with lid',1,75,180.00,'2025-05-10 06:52:00'),(334,'Hand Sanitizer','sanitizer.jpg','Alcohol-based hand sanitizer for hygiene',1,200,110.00,'2025-05-10 06:53:00'),(335,'Extension Cord','extension_cord.jpg','5-socket extension board with surge protection',1,40,450.00,'2025-05-10 06:54:00'),(336,'USB Flash Drive','usb.jpg','32GB USB flash drive for portable storage',1,100,420.00,'2025-05-10 06:55:00'),(337,'Wall Paint','wall_paint.jpg','Interior wall paint with smooth finish',1,30,2200.00,'2025-05-10 06:56:00'),(338,'Rechargeable Torch','torch.jpg','Long-lasting LED torch with rechargeable battery',1,50,850.00,'2025-05-10 06:57:00'),(339,'Yoga Mat','yoga_mat.jpg','Non-slip yoga mat for home workouts and stretching',1,60,750.00,'2025-05-10 06:58:00'),(340,'Mobile Charger','mobile_charger.jpg','Fast-charging adapter compatible with all smartphones',1,100,399.00,'2025-05-10 06:59:00'),(341,'Premium Basmati Rice','basmati.jpg','Long-grain aged rice for premium customers',10,100,120.00,'2025-06-29 03:47:14'),(342,'Premium Basmati Rice2','commodity_fb13a00eb4bd49dbb9d0d325709b235b.png','Long-grain aged rice for premium customers',10,100,120.00,'2025-07-22 23:36:38');
+INSERT INTO `commodity` VALUES (311,'Fruits','fruits.jpg','edgeyhey',1,50,70.00,'2025-05-10 06:30:00'),(312,'Vegetables','vegetables.jpg','Mixed fresh vegetables for regular cooking needs',1,50,45.00,'2025-05-10 06:31:00'),(313,'Kids Bicycle','kids_bicycle_v2.jpg','Updated kids bicycle',1,5,5100.00,'2025-05-10 06:32:00'),(314,'Electric Kettle','electric_kettle.jpg','Convenient appliance for boiling water quickly',1,20,999.00,'2025-05-10 06:33:00'),(315,'Notebooks Pack','notebooks.jpg','Set of ruled notebooks for school or office use',1,100,300.00,'2025-05-10 06:34:00'),(316,'Dining Table','dining_table.jpg','Sturdy wooden dining table ideal for families',1,3,8500.00,'2025-05-10 06:35:00'),(317,'Curtains Set','curtains.jpg','Decorative curtains set for home interiors',1,25,1200.00,'2025-05-10 06:36:00'),(318,'Toiletries Pack','toiletries.jpg','Daily essentials including soap, shampoo, and toothpaste',1,100,500.00,'2025-05-10 06:37:00'),(319,'Mixer Grinder','mixer_grinder.jpg','Multipurpose kitchen appliance for blending and grinding',1,15,2800.00,'2025-05-10 06:38:00'),(320,'Fitness Dumbbells','dumbbells.jpg','Adjustable dumbbells suitable for home workouts',1,20,1500.00,'2025-05-10 06:39:00'),(321,'Mattress','mattress.jpg','Comfortable foam mattress for quality sleep',1,10,5200.00,'2025-05-10 06:40:00'),(322,'Ceiling Fan','ceiling_fan.jpg','Energy-efficient ceiling fan with modern design',1,20,1800.00,'2025-05-10 06:41:00'),(323,'LED Bulb Set','led_bulbs.jpg','Pack of long-lasting energy-saving LED bulbs',1,100,800.00,'2025-05-10 06:42:00'),(324,'Water Bottle','bottle.jpg','Reusable plastic water bottle for daily hydration',1,200,120.00,'2025-05-10 06:43:00'),(325,'Laptop Stand','laptop_stand.jpg','Ergonomic stand to elevate laptop for comfortable viewing',1,50,750.00,'2025-05-10 06:44:00'),(326,'Cooking Oil','cooking_oil.jpg','Refined cooking oil suitable for everyday use',1,100,150.00,'2025-05-10 06:45:00'),(327,'Washing Powder','washing_powder.jpg','Effective detergent powder for all fabrics',1,75,350.00,'2025-05-10 06:46:00'),(328,'Garden Tools Kit','garden_tools.jpg','Set of tools for basic home gardening tasks',1,20,1400.00,'2025-05-10 06:47:00'),(329,'Pillows','pillows.jpg','Soft cotton pillows suitable for all bed types',1,60,250.00,'2025-05-10 06:48:00'),(331,'Home Decor Lights','decor_lights.jpg','String lights for decoration during events or festivals',1,80,950.00,'2025-05-10 06:50:00'),(332,'Kids Bicyced','kids_bicycle_v2.jpg','Updated description for kids bicycle',1,5,508.00,'2025-05-10 06:51:00'),(333,'Plastic Storage Box','storage_box.jpg','Multipurpose storage container with lid',1,75,180.00,'2025-05-10 06:52:00'),(334,'Hand Sanitizer','sanitizer.jpg','Alcohol-based hand sanitizer for hygiene',1,200,110.00,'2025-05-10 06:53:00'),(335,'Extension Cord','extension_cord.jpg','5-socket extension board with surge protection',1,40,450.00,'2025-05-10 06:54:00'),(336,'USB Flash Drive','usb.jpg','32GB USB flash drive for portable storage',1,100,420.00,'2025-05-10 06:55:00'),(337,'Wall Paint','wall_paint.jpg','Interior wall paint with smooth finish',1,30,2200.00,'2025-05-10 06:56:00'),(338,'Rechargeable Torch','torch.jpg','Long-lasting LED torch with rechargeable battery',1,50,850.00,'2025-05-10 06:57:00'),(339,'Yoga Mat','yoga_mat.jpg','Non-slip yoga mat for home workouts and stretching',1,60,750.00,'2025-05-10 06:58:00'),(340,'Mobile Charger','mobile_charger.jpg','Fast-charging adapter compatible with all smartphones',1,100,399.00,'2025-05-10 06:59:00'),(341,'Premium Basmati Rice','basmati.jpg','Long-grain aged rice for premium customers',10,100,120.00,'2025-06-29 03:47:14'),(342,'Premium Basmati Rice21',NULL,'Long-grain aged rice for premium customers',10,100,120.00,'2025-07-22 23:36:38');
 /*!40000 ALTER TABLE `commodity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -383,7 +383,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (177730,5,31,1,'In Transit','billing','2025-06-30 15:30:17','2025-06-30 15:31:12',NULL,NULL),(318126,5,31,1,'In Transit','commodity','2025-05-26 17:30:31','2025-05-26 17:30:31',NULL,NULL),(4140411,5,31,1,'In Transit','billing','2025-06-01 14:34:14','2025-06-01 14:34:35',NULL,NULL),(8304319,5,31,10,'In Transit','billing','2025-07-20 12:38:30','2025-07-20 12:42:33',NULL,NULL),(10561754,5,31,1,'In Transit','commodity','2025-05-26 16:40:56','2025-05-26 16:40:56',NULL,NULL),(19042874,5,31,1,'In Transit','commodity','2025-05-26 16:49:04','2025-05-26 16:49:04',NULL,NULL),(32549917,5,31,1,'In Transit','commodity','2025-05-26 17:02:54','2025-05-26 17:02:54',NULL,NULL),(36559339,5,31,1,'In Transit','order','2025-05-20 17:06:55','2025-05-20 17:06:55',NULL,NULL),(37405863,5,31,1,'In Transit','commodity','2025-06-29 07:07:40','2025-06-29 07:07:40',NULL,NULL),(38442863,31,5,1,'In Transit','commodity','2025-06-29 07:08:44','2025-06-29 07:08:44',NULL,NULL),(38471864,5,31,1,'In Transit','commodity','2025-05-29 02:08:47','2025-05-29 02:08:47',NULL,NULL),(42149377,5,31,1,'In Transit','order','2025-05-20 17:12:14','2025-05-20 17:12:14',NULL,NULL),(42465129,31,5,1,'In Transit','billing','2025-05-29 17:12:46','2025-06-01 16:47:50',NULL,NULL),(44539641,31,5,1,'In Transit','commodity','2025-06-29 07:14:53','2025-06-29 07:14:53',NULL,NULL),(46318748,5,31,1,'In Transit','billing','2025-06-29 07:16:31','2025-07-20 12:43:30',NULL,NULL),(48123420,5,31,1,'Picked Up','billing','2025-07-20 02:18:12','2025-07-23 15:50:37',NULL,NULL),(48171109,5,31,1,'In Transit','commodity','2025-05-20 17:18:17','2025-05-20 17:18:17',NULL,NULL),(48379489,31,5,1,'In Transit','billing','2025-06-29 07:18:37','2025-07-20 12:35:28',NULL,NULL),(49180128,5,31,1,'In Transit','commodity','2025-05-20 17:19:18','2025-05-20 17:19:18',NULL,NULL),(49524049,5,31,1,'In Transit','commodity','2025-06-22 10:19:52','2025-06-22 10:19:52',NULL,NULL),(50023588,5,31,1,'In Transit','billing','2025-05-20 17:20:02','2025-06-22 10:12:09',NULL,NULL),(50089505,5,31,1,'In Transit','commodity','2025-06-22 10:20:08','2025-06-22 10:20:08',NULL,NULL),(50093252,5,31,1,'In Transit','billing','2025-06-29 07:20:09','2025-06-30 15:15:33',NULL,NULL),(51113761,5,31,1,'In Transit','commodity','2025-06-22 10:21:11','2025-06-22 10:21:11',NULL,NULL);
+INSERT INTO `orders` VALUES (177730,5,31,1,'In Transit','billing','2025-06-30 15:30:17','2025-06-30 15:31:12',NULL,NULL),(318126,5,31,1,'In Transit','commodity','2025-05-26 17:30:31','2025-05-26 17:30:31',NULL,NULL),(4140411,5,31,1,'In Transit','billing','2025-06-01 14:34:14','2025-06-01 14:34:35',NULL,NULL),(8304319,5,31,10,'Picked Up','billing','2025-07-20 12:38:30','2025-07-24 16:28:22',NULL,NULL),(10561754,5,31,1,'In Transit','commodity','2025-05-26 16:40:56','2025-05-26 16:40:56',NULL,NULL),(19042874,5,31,1,'In Transit','commodity','2025-05-26 16:49:04','2025-05-26 16:49:04',NULL,NULL),(32549917,5,31,1,'In Transit','commodity','2025-05-26 17:02:54','2025-05-26 17:02:54',NULL,NULL),(36559339,5,31,1,'In Transit','order','2025-05-20 17:06:55','2025-05-20 17:06:55',NULL,NULL),(37405863,5,31,1,'In Transit','commodity','2025-06-29 07:07:40','2025-06-29 07:07:40',NULL,NULL),(38442863,31,5,1,'In Transit','commodity','2025-06-29 07:08:44','2025-06-29 07:08:44',NULL,NULL),(38471864,5,31,1,'In Transit','commodity','2025-05-29 02:08:47','2025-05-29 02:08:47',NULL,NULL),(42149377,5,31,1,'In Transit','order','2025-05-20 17:12:14','2025-05-20 17:12:14',NULL,NULL),(42465129,31,5,1,'In Transit','billing','2025-05-29 17:12:46','2025-06-01 16:47:50',NULL,NULL),(44539641,31,5,1,'In Transit','commodity','2025-06-29 07:14:53','2025-06-29 07:14:53',NULL,NULL),(46318748,5,31,1,'In Transit','billing','2025-06-29 07:16:31','2025-07-20 12:43:30',NULL,NULL),(48123420,5,31,1,'Picked Up','billing','2025-07-20 02:18:12','2025-07-23 15:50:37',NULL,NULL),(48171109,5,31,1,'In Transit','commodity','2025-05-20 17:18:17','2025-05-20 17:18:17',NULL,NULL),(48379489,31,5,1,'In Transit','billing','2025-06-29 07:18:37','2025-07-20 12:35:28',NULL,NULL),(49180128,5,31,1,'In Transit','commodity','2025-05-20 17:19:18','2025-05-20 17:19:18',NULL,NULL),(49524049,5,31,1,'In Transit','commodity','2025-06-22 10:19:52','2025-06-22 10:19:52',NULL,NULL),(50023588,5,31,1,'In Transit','billing','2025-05-20 17:20:02','2025-06-22 10:12:09',NULL,NULL),(50089505,5,31,1,'In Transit','commodity','2025-06-22 10:20:08','2025-06-22 10:20:08',NULL,NULL),(50093252,5,31,1,'In Transit','billing','2025-06-29 07:20:09','2025-06-30 15:15:33',NULL,NULL),(51113761,5,31,1,'In Transit','commodity','2025-06-22 10:21:11','2025-06-22 10:21:11',NULL,NULL),(56223511,5,31,10,'In Transit','commodity','2025-07-24 17:26:22','2025-07-24 17:26:22',NULL,NULL);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3140,7 +3140,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `GetOrdersByEmployeeId` */;
+/*!50003 DROP PROCEDURE IF EXISTS `GetOrdersByCustomerId` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -3150,7 +3150,10 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetOrdersByEmployeeId`(IN employee_id INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetOrdersByCustomerId`(
+    IN customer_id INT,
+    IN input_order_status VARCHAR(50)
+)
 BEGIN
     SELECT 
         o.order_id,
@@ -3165,7 +3168,44 @@ BEGIN
     FROM orders o
     JOIN customer sender ON o.sender_id = sender.customer_id
     JOIN customer receiver ON o.receiver_id = receiver.customer_id
-    WHERE o.created_by = employee_id;
+    WHERE (o.sender_id = customer_id OR o.receiver_id = customer_id)
+      AND (input_order_status = 'All' OR o.order_status = input_order_status);
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `GetOrdersByEmployeeId` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetOrdersByEmployeeId`(
+    IN employee_id INT,
+    IN input_order_status VARCHAR(50)
+)
+BEGIN
+    SELECT 
+        o.order_id,
+        sender.customer_id AS sender_id,
+        sender.store_name AS sender_name,
+        receiver.customer_id AS receiver_id,
+        receiver.store_name AS receiver_name,
+        o.order_status,
+        o.stage,
+        o.created_at,
+        o.updated_at
+    FROM orders o
+    JOIN customer sender ON o.sender_id = sender.customer_id
+    JOIN customer receiver ON o.receiver_id = receiver.customer_id
+    WHERE o.created_by = employee_id
+      AND (input_order_status ="All" OR o.order_status = input_order_status);
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -6028,4 +6068,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-23 23:37:13
+-- Dump completed on 2025-07-24 23:34:07
