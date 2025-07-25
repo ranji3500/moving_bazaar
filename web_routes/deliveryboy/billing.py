@@ -225,7 +225,6 @@ def billing_test_api():
         }
     return jsonify(sample_response), 200
 
-# API to Get Billing Details by Employee ID
 # API to Get Billing Details by Order ID (POST)
 @billing_bp.route('/invoice_pdf', methods=['POST'])
 def get_invoice_by_orders():
@@ -250,3 +249,41 @@ def get_invoice_by_orders():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@billing_bp.route('/billing_overview/<int:customer_id>', methods=['GET'])
+@jwt_required()
+def get_billing_overview():
+    try:
+        status_filter = request.args.get('status', None)
+        claims = get_jwt()
+        user_id = claims.get('userId')
+
+        # Validate input
+        if status_filter not in [None, 'Pending', 'Paid']:
+            return jsonify({
+                "status": "Failure",
+                "message": "Invalid status filter. Use 'All', 'Pending', or 'Paid'."
+            }), 400
+
+        # result = db.call_procedure('GetBillingByEmployeeId', (status_filter,))
+        result = db.call_procedure('GetBillingByEmployeeId', (user_id,status_filter))
+
+        if not result:
+            return jsonify({
+                "status": "Success",
+                "message": "No billing records found.",
+                "data": []
+            }), 200
+
+        return jsonify({
+            "status": "Success",
+            "message": "Billing records retrieved successfully.",
+            "data": result
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "status": "Failure",
+            "message": str(e)
+        }), 500

@@ -534,11 +534,10 @@ def get_image_by_filename(filename):
         return jsonify({"status": "Error", "message": str(e)}), 500
 
 
-@orders_bp.route('/deletedocument', methods=['DELETE'])
+@orders_bp.route('/deletedocument/<doc_id>', methods=['DELETE'])
 @jwt_required()
-def delete_document():
+def delete_document(doc_id):
     try:
-        doc_id = request.args.get('docId')
         if not doc_id:
             return jsonify({"status": "Failure", "message": "Missing 'doc_id' query parameter."}), 400
 

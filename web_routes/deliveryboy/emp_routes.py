@@ -19,7 +19,7 @@ def index():
 def create_customer():
     data = request.json
     claims = get_jwt()
-    user_id = claims.get('userId')
+    user_id = claims.get('sub')
     try:
         procedure_name = "insert_customer"
         params = (
