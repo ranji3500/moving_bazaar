@@ -1,5 +1,0 @@
-mysql-connector-python
-flask
-flask-cors
-flask_jwt_extended
-bcrypt

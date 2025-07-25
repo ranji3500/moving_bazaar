@@ -10,6 +10,7 @@ This project uses a Python virtual environment and installs dependencies from `r
 
 Run the following command in your project directory:
 
+note:pythopn version 3.9
 ```bash
 python -m venv venv
 ```
