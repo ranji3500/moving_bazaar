@@ -3,6 +3,7 @@ from web_routes.deliveryboy import commodities_bp ,employee_bp,orders_bp,billing
 from web_routes.admin import admin_bp
 
 import os
+os.makedirs("logs", exist_ok=True)
 
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt

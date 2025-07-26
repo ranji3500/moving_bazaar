@@ -253,11 +253,11 @@ def get_invoice_by_orders():
 
 @billing_bp.route('/billing_overview/<int:customer_id>', methods=['GET'])
 @jwt_required()
-def get_billing_overview():
+def get_billing_overview(customer_id):
     try:
         status_filter = request.args.get('status', None)
         claims = get_jwt()
-        user_id = claims.get('userId')
+        user_id = customer_id
 
         # Validate input
         if status_filter not in [None, 'Pending', 'Paid']:
