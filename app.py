@@ -6,6 +6,7 @@ import os ,random
 from web_routes.welcomegretting import send_welcome_email
 from web_routes.registergretting import send_registration_email
 os.makedirs("logs", exist_ok=True)
+from web_routes.signup import user_register
 
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
@@ -152,6 +153,9 @@ def verify_otp():
 
     email = data.get('email')
     otp_input = data.get('otp')
+    fullName = data.get('fullName')
+    password = data.get('password')
+    phone = data.get('phone')
 
     if not email or not otp_input:
         return jsonify({
@@ -168,10 +172,21 @@ def verify_otp():
             'message': 'OTP expired or not found.'
         }), 400
 
+    params = (
+        fullName,
+        email,
+        phone,
+        password,
+        "profile.jpg",
+        1,
+        "client"
+    )
+
     # Compare OTPs
     if str(otp_input) == str(stored_otp):  # Ensure string comparison
         cache.delete(email)  # Clean up OTP after successful validation
         send_welcome_email(email)  # Optional: send a welcome/confirmation email
+        user_register(params)
 
         return jsonify({
             'status': 'Success',
