@@ -71,7 +71,7 @@ def send_registration_email(receiver_email):
     msg.add_alternative(html_body, subtype='html')
 
     # Attach logo (uploaded earlier)
-    logo_path = r"movingbazaar_logo.png"
+    logo_path = r"web_routes/movingbazaar_logo.png"
     try:
         with open(logo_path, 'rb') as img:
             maintype, subtype = mimetypes.guess_type(logo_path)[0].split('/')

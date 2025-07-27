@@ -128,9 +128,14 @@ def send_otp():
         }), 400
 
     otp = generate_otp()
-    cache.set(email, otp)  # Using email as the key
-    send_registration_email(email)
 
+    # 🔐 Store OTP with expiry (if supported by your cache)
+    cache.set(email, otp)  # If using dict, this will just store it directly
+
+    # 📨 Simulate or send email
+    send_welcome_email(email, otp)
+
+    # 🐞 Debug info
     print(f"[DEBUG] OTP for {email}: {otp}")
     print(f"[INFO] Simulating OTP sent to email: {email}")
 
@@ -144,26 +149,30 @@ def send_otp():
 @app.route('/verify_otp', methods=['POST'])
 def verify_otp():
     data = request.get_json()
+
     email = data.get('email')
     otp_input = data.get('otp')
 
     if not email or not otp_input:
         return jsonify({
             'status': 'Failure',
-            'message': 'email and OTP are required'
+            'message': 'Email and OTP are required.'
         }), 400
 
+    # Fetch OTP from cache (like Redis)
     stored_otp = cache.get(email)
 
     if stored_otp is None:
         return jsonify({
             'status': 'Failure',
-            'message': 'OTP expired or not found'
+            'message': 'OTP expired or not found.'
         }), 400
 
-    if otp_input == stored_otp:
-        cache.delete(email)
-        send_welcome_email(email)
+    # Compare OTPs
+    if str(otp_input) == str(stored_otp):  # Ensure string comparison
+        cache.delete(email)  # Clean up OTP after successful validation
+        send_welcome_email(email)  # Optional: send a welcome/confirmation email
+
         return jsonify({
             'status': 'Success',
             'message': 'OTP verified successfully ✅'
@@ -173,7 +182,6 @@ def verify_otp():
             'status': 'Failure',
             'message': 'Invalid OTP ❌'
         }), 401
-
 
 
 if __name__ == '__main__':
