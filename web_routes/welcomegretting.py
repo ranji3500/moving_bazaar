@@ -79,7 +79,7 @@ def send_welcome_email(receiver_email, user_name="User"):
     msg.add_alternative(html_body, subtype='html')
 
     # Attach the logo
-    logo_path = r"D:\today26\moving_bazaar-main\web_routes\movingbazaar_logo.png"
+    logo_path = r"movingbazaar_logo.png"
     try:
         with open(logo_path, 'rb') as img:
             maintype, subtype = mimetypes.guess_type(logo_path)[0].split('/')

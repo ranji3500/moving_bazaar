@@ -129,6 +129,7 @@ def send_otp():
 
     otp = generate_otp()
     cache.set(email, otp)  # Using email as the key
+    send_registration_email(email)
 
     print(f"[DEBUG] OTP for {email}: {otp}")
     print(f"[INFO] Simulating OTP sent to email: {email}")
@@ -162,6 +163,7 @@ def verify_otp():
 
     if otp_input == stored_otp:
         cache.delete(email)
+        send_welcome_email(email)
         return jsonify({
             'status': 'Success',
             'message': 'OTP verified successfully ✅'
