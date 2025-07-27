@@ -113,37 +113,29 @@ def allowed_file(filename):
 def generate_otp(length=6):
     return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
+
 # 1. Send OTP
 @app.route('/send_otp', methods=['POST'])
 def send_otp():
     data = request.get_json()
-    phone = data.get('phone')
+    full_name = data.get('fullName')
     email = data.get('email')
-    user_id = data.get('user_id')
 
-    # Validate required fields
-    if not phone or not email or not user_id:
+    if not full_name or not email:
         return jsonify({
             'status': 'Failure',
-            'message': 'Phone, email, and user_id are required'
+            'message': 'fullName and email are required'
         }), 400
 
     otp = generate_otp()
+    cache.set(email, otp)  # Using email as the key
 
-    # Store OTP in cache using phone or user_id as key (based on your design)
-    cache.set(phone, otp)
-
-    print(f"[DEBUG] OTP for {phone} (user_id={user_id}): {otp}")
-
-    # --- Optional: Send OTP via email (simulated here) ---
-    # You can integrate smtplib or any mail service
+    print(f"[DEBUG] OTP for {email}: {otp}")
     print(f"[INFO] Simulating OTP sent to email: {email}")
-    # send_registration_email(email, otp)  # <-- Uncomment when implemented
 
     return jsonify({
         'status': 'Success',
-        'message': f'OTP sent to phone: {phone} and email: {email}',
-        'user_id': user_id
+        'message': f'OTP sent to {full_name} at {email}'
     }), 200
 
 
@@ -151,22 +143,35 @@ def send_otp():
 @app.route('/verify_otp', methods=['POST'])
 def verify_otp():
     data = request.get_json()
-    phone = data.get('phone')
+    email = data.get('email')
     otp_input = data.get('otp')
 
-    if not phone or not otp_input:
-        return jsonify({'status': 'Failure', 'message': 'Phone and OTP are required'}), 400
+    if not email or not otp_input:
+        return jsonify({
+            'status': 'Failure',
+            'message': 'email and OTP are required'
+        }), 400
 
-    stored_otp = cache.get(phone)
+    stored_otp = cache.get(email)
 
     if stored_otp is None:
-        return jsonify({'status': 'Failure', 'message': 'OTP expired or not found'}), 400
+        return jsonify({
+            'status': 'Failure',
+            'message': 'OTP expired or not found'
+        }), 400
 
     if otp_input == stored_otp:
-        cache.delete(phone)
-        return jsonify({'status': 'Success', 'message': 'OTP verified successfully ✅'}), 200
+        cache.delete(email)
+        return jsonify({
+            'status': 'Success',
+            'message': 'OTP verified successfully ✅'
+        }), 200
     else:
-        return jsonify({'status': 'Failure', 'message': 'Invalid OTP ❌'}), 401
+        return jsonify({
+            'status': 'Failure',
+            'message': 'Invalid OTP ❌'
+        }), 401
+
 
 
 if __name__ == '__main__':
