@@ -108,7 +108,7 @@ CREATE TABLE `city` (
 
 LOCK TABLES `city` WRITE;
 /*!40000 ALTER TABLE `city` DISABLE KEYS */;
-INSERT INTO `city` VALUES (1,'Abu Dhabi',0,'2025-06-29 09:37:31'),(2,'Dubai',1,'2025-06-29 09:37:31'),(3,'Sharjah',0,'2025-06-29 09:37:31'),(4,'Al Ain',0,'2025-06-29 09:37:31'),(5,'Ajman',0,'2025-06-29 09:37:31'),(6,'Fujairah',0,'2025-06-29 09:37:31'),(7,'Ras Al Khaimah',0,'2025-06-29 09:37:31'),(8,'Umm Al Quwain',0,'2025-06-29 09:37:31');
+INSERT INTO `city` VALUES (1,'Abu Dhabi',1,'2025-06-29 09:37:31'),(2,'Dubai',0,'2025-06-29 09:37:31'),(3,'Sharjah',1,'2025-06-29 09:37:31'),(4,'Al Ain',0,'2025-06-29 09:37:31'),(5,'Ajman',0,'2025-06-29 09:37:31'),(6,'Fujairah',0,'2025-06-29 09:37:31'),(7,'Ras Al Khaimah',0,'2025-06-29 09:37:31'),(8,'Umm Al Quwain',0,'2025-06-29 09:37:31');
 /*!40000 ALTER TABLE `city` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -438,9 +438,10 @@ CREATE TABLE `users` (
   `employee_profile_photo` varchar(255) DEFAULT NULL,
   `employee_is_admin` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `usertype` enum('client','employee') DEFAULT 'employee',
   PRIMARY KEY (`employeeid`),
   UNIQUE KEY `employee_email` (`employee_email`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -449,7 +450,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Ranjith','ranji@example.com','83005809','Welcome123',NULL,0,'2025-01-21 18:04:23'),(10,'Karthick','Karthick@example.com','59876543','Welcome123',NULL,0,'2025-01-26 15:10:47'),(23,'Karthick3','karthic2@example.com','59376543','Welcome123','karthick.jpg',0,'2025-06-29 03:27:19'),(24,'Karthick3','karthic12@example.com','59376545','Welcome123',NULL,0,'2025-07-22 17:53:02'),(25,'Karthick3','karthic172@example.com','59376525','Welcome123',NULL,0,'2025-07-22 17:53:39'),(27,'Karthick3','karthifc172@example.com','59376523','Welcome123',NULL,1,'2025-07-22 17:56:35'),(28,'Karthick3','karthifca172@example.com','59376521','Welcome123',NULL,1,'2025-07-23 01:03:09');
+INSERT INTO `users` VALUES (1,'Ranjith','ranji@example.com','83005809','Welcome123',NULL,0,'2025-01-21 18:04:23',NULL),(10,'Karthick','Karthick@example.com','59876543','Welcome123',NULL,0,'2025-01-26 15:10:47',NULL),(23,'Karthick3','karthic2@example.com','59376543','Welcome123','karthick.jpg',0,'2025-06-29 03:27:19',NULL),(24,'Karthick3','karthic12@example.com','59376545','Welcome123',NULL,0,'2025-07-22 17:53:02',NULL),(25,'Karthick3','karthic172@example.com','59376525','Welcome123',NULL,0,'2025-07-22 17:53:39',NULL),(27,'Karthick3','karthifc172@example.com','59376523','Welcome123',NULL,1,'2025-07-22 17:56:35',NULL),(28,'Karthick3','karthifca172@example.com','59376521','Welcome123',NULL,1,'2025-07-23 01:03:09',NULL),(29,'Hariharanbjhbj','harirv.krish@gmail.com','8220265765','12345','None_profile_19c5dca68fc947b0b65ccdc07f614b3f.png',1,'2025-07-27 07:50:36','employee');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2257,6 +2258,7 @@ BEGIN
             FROM (
                 SELECT JSON_OBJECT(
                     'user_id', u.employeeid,
+                    "employee_profile_photo",u.employee_profile_photo,
                     'user_name', u.employee_full_name,
                     'total_orders', COUNT(DISTINCT o.order_id),
                     'total_sales', COALESCE(SUM(b.total_price), 0)
@@ -3736,7 +3738,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_billing_overview`(
 )
 BEGIN
     SELECT 
-        b.billing_id AS billingId,
+        b.order_id AS order_id,
         CONCAT(sender.store_name, ' - ', receiver.store_name) AS billTitle,
         b.created_at AS createdAt,
         b.payment_status AS paymentStatus,
@@ -4401,40 +4403,48 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertEmployee`(
     IN p_phone_number VARCHAR(15),
     IN p_password VARCHAR(255),
     IN p_profile_photo VARCHAR(255),
-    IN p_is_admin TINYINT(1)
+    IN p_is_admin TINYINT(1),
+    IN p_usertype VARCHAR(15)
 )
 BEGIN
     DECLARE phone_exists INT;
 
-    -- Check if phone number already exists
-    SELECT COUNT(*) INTO phone_exists
-    FROM users
-    WHERE employee_phone_number = p_phone_number;
-
-    IF phone_exists > 0 THEN
-        SELECT 'Phone number already exists.' AS message, NULL AS employee_id;
+    -- Validate ENUM manually
+    IF p_usertype NOT IN ('client', 'employee') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid usertype value. Must be client or employee';
     ELSE
-        -- Insert the new employee
-        INSERT INTO users (
-            employee_full_name,
-            employee_email,
-            employee_phone_number,
-            employee_password,
-            employee_profile_photo,
-            employee_is_admin,
-            created_at
-        )
-        VALUES (
-            p_full_name,
-            p_email,
-            p_phone_number,
-            p_password,
-            p_profile_photo,
-            p_is_admin,
-            NOW()
-        );
+        -- Check if phone number already exists
+        SELECT COUNT(*) INTO phone_exists
+        FROM users
+        WHERE employee_phone_number = p_phone_number;
 
-        SELECT LAST_INSERT_ID() AS employee_id, 'Employee successfully inserted.' AS message;
+        IF phone_exists > 0 THEN
+            SELECT 'Phone number already exists.' AS message, NULL AS employee_id;
+        ELSE
+            INSERT INTO users (
+                employee_full_name,
+                employee_email,
+                employee_phone_number,
+                employee_password,
+                employee_profile_photo,
+                employee_is_admin,
+                created_at,
+                usertype
+            )
+            VALUES (
+                p_full_name,
+                p_email,
+                p_phone_number,
+                p_password,
+                p_profile_photo,
+                p_is_admin,
+                NOW(),
+                p_usertype
+            );
+
+            SELECT LAST_INSERT_ID() AS employee_id, 'Employee successfully inserted.' AS message;
+        END IF;
     END IF;
 END ;;
 DELIMITER ;
@@ -6130,4 +6140,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-25 22:44:12
+-- Dump completed on 2025-07-27 16:28:21

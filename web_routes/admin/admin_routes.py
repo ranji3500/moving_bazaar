@@ -51,7 +51,6 @@ def create_employee():
     user_id = claims.get('userId')
     user_name = claims.get('userName')
     email = claims.get('email')
-    user_type = claims.get('user_type')
 
     try:
         # Get form fields
@@ -60,6 +59,7 @@ def create_employee():
         phone_number = request.form.get('phoneNumber')
         password = request.form.get('password')
         is_admin = request.form.get('isAdmin', 'false').lower() == 'true'
+        user_type = request.form.get('user_type').lower()
 
         # Handle single profile photo
         file = request.files.get('profile_photo')
@@ -80,7 +80,8 @@ def create_employee():
             phone_number,
             password,
             profile_photo_filename,  # single file name (not JSON array)
-            1
+            1,
+            user_type
         )
 
         rows_affected = db.insert_using_procedure(procedure_name, params)
@@ -777,29 +778,55 @@ def get_documents_by_order(order_id):
 def update_city_service():
     try:
         data = request.get_json()
-        city_id = data.get('cityId')
-        is_service = data.get('isService')
+        cities = data.get('cities')
 
-        if city_id is None or is_service is None:
+        if not cities or not isinstance(cities, list):
             return jsonify({
                 "status": "Failure",
-                "message": "Missing 'cityId' or 'isService' in request body"
+                "message": "Missing or invalid 'cities' list in request body"
             }), 400
 
         procedure_name = 'update_city_service_status'
-        params = (int(city_id), bool(is_service))
+        results = []
 
-        result = db.insertall_using_procedure(procedure_name, params)
+        for city in cities:
+            city_id = city.get('cityId')
+            is_service = city.get('isService')
 
-        if not result or not result[0]:
-            return jsonify({
-                "status": "Failure",
-                "message": "Procedure did not return a result"
-            }), 500
+            if city_id is None or is_service is None:
+                results.append({
+                    "cityId": city_id,
+                    "status": "Failure",
+                    "message": "Missing 'cityId' or 'isService'"
+                })
+                continue
+
+            try:
+                params = (int(city_id), bool(is_service))
+                result = db.insertall_using_procedure(procedure_name, params)
+
+                if result and result[0]:
+                    results.append({
+                        "cityId": city_id,
+                        "status": "Success",
+                        "message": result[0].get("message", "Updated successfully")
+                    })
+                else:
+                    results.append({
+                        "cityId": city_id,
+                        "status": "Failure",
+                        "message": "No response from procedure"
+                    })
+            except Exception as inner_e:
+                results.append({
+                    "cityId": city_id,
+                    "status": "Failure",
+                    "message": str(inner_e)
+                })
 
         return jsonify({
-            "status": "Success",
-            "message": result[0].get("message", "Updated successfully")
+            "status": "Complete",
+            "results": results
         }), 200
 
     except Exception as e:
@@ -807,6 +834,7 @@ def update_city_service():
             "status": "Failure",
             "message": str(e)
         }), 500
+
 
 
 @admin_bp.route('/cities', methods=['GET'])

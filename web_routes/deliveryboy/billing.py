@@ -251,21 +251,15 @@ def get_invoice_by_orders():
         return jsonify({"error": str(e)}), 500
 
 
-@billing_bp.route('/billing_overview/<int:customer_id>', methods=['GET'])
+@billing_bp.route('/billing_overview', methods=['GET'])
 @jwt_required()
-def get_billing_overview(customer_id):
+def get_billing_overview():
     try:
-        status_filter = request.args.get('status', None)
         claims = get_jwt()
-        user_id = customer_id
 
-        # Validate input
-        if status_filter not in [None, 'Pending', 'Paid']:
-            return jsonify({
-                "status": "Failure",
-                "message": "Invalid status filter. Use 'All', 'Pending', or 'Paid'."
-            }), 400
-
+        status_filter = request.args.get('status', None)
+        user_id = claims.get('sub')
+        claims = get_jwt()
         # result = db.call_procedure('GetBillingByEmployeeId', (status_filter,))
         result = db.call_procedure('GetBillingByEmployeeId', (user_id,status_filter))
 

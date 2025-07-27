@@ -1,14 +1,23 @@
 from flask import Flask,send_from_directory
 from web_routes.deliveryboy import commodities_bp ,employee_bp,orders_bp,billing_bp,customers_bp
 from web_routes.admin import admin_bp
-
-import os
+from flask_caching import Cache
+import os ,random
+from web_routes.welcomegretting import send_welcome_email
+from web_routes.registergretting import send_registration_email
 os.makedirs("logs", exist_ok=True)
 
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
 
 app = Flask(__name__, static_folder='dist')
+
+
+# Configure cache (you can switch to Redis in production)
+app.config['CACHE_TYPE'] = 'SimpleCache'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # OTP valid for 5 minutes
+cache = Cache(app)
+
 
 app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
@@ -34,9 +43,6 @@ app.register_blueprint(billing_bp, url_prefix='/billing')
 CORS(app,
      resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}},
      supports_credentials=True)
-
-# def index():
-#     return "backend server is running"
 
 
 import jwt
@@ -103,6 +109,64 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def generate_otp(length=6):
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+
+# 1. Send OTP
+@app.route('/send_otp', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    phone = data.get('phone')
+    email = data.get('email')
+    user_id = data.get('user_id')
+
+    # Validate required fields
+    if not phone or not email or not user_id:
+        return jsonify({
+            'status': 'Failure',
+            'message': 'Phone, email, and user_id are required'
+        }), 400
+
+    otp = generate_otp()
+
+    # Store OTP in cache using phone or user_id as key (based on your design)
+    cache.set(phone, otp)
+
+    print(f"[DEBUG] OTP for {phone} (user_id={user_id}): {otp}")
+
+    # --- Optional: Send OTP via email (simulated here) ---
+    # You can integrate smtplib or any mail service
+    print(f"[INFO] Simulating OTP sent to email: {email}")
+    # send_registration_email(email, otp)  # <-- Uncomment when implemented
+
+    return jsonify({
+        'status': 'Success',
+        'message': f'OTP sent to phone: {phone} and email: {email}',
+        'user_id': user_id
+    }), 200
+
+
+# 2. Verify OTP
+@app.route('/verify_otp', methods=['POST'])
+def verify_otp():
+    data = request.get_json()
+    phone = data.get('phone')
+    otp_input = data.get('otp')
+
+    if not phone or not otp_input:
+        return jsonify({'status': 'Failure', 'message': 'Phone and OTP are required'}), 400
+
+    stored_otp = cache.get(phone)
+
+    if stored_otp is None:
+        return jsonify({'status': 'Failure', 'message': 'OTP expired or not found'}), 400
+
+    if otp_input == stored_otp:
+        cache.delete(phone)
+        return jsonify({'status': 'Success', 'message': 'OTP verified successfully ✅'}), 200
+    else:
+        return jsonify({'status': 'Failure', 'message': 'Invalid OTP ❌'}), 401
 
 
 if __name__ == '__main__':
