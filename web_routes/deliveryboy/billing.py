@@ -261,7 +261,7 @@ def get_billing_overview():
         user_id = claims.get('sub')
         claims = get_jwt()
         # result = db.call_procedure('GetBillingByEmployeeId', (status_filter,))
-        result = db.call_procedure('GetBillingByEmployeeId', (user_id,status_filter))
+        result = db.call_procedure('GetBillingByEmployeeId', (user_id,))
 
         if not result:
             return jsonify({

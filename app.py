@@ -134,7 +134,7 @@ def send_otp():
     cache.set(email, otp)  # If using dict, this will just store it directly
 
     # 📨 Simulate or send email
-    send_welcome_email(email, otp)
+    send_registration_email(email, otp)
 
     # 🐞 Debug info
     print(f"[DEBUG] OTP for {email}: {otp}")
@@ -185,7 +185,7 @@ def verify_otp():
     # Compare OTPs
     if str(otp_input) == str(stored_otp):  # Ensure string comparison
         cache.delete(email)  # Clean up OTP after successful validation
-        send_welcome_email(email)  # Optional: send a welcome/confirmation email
+        send_registration_email(email)  # Optional: send a welcome/confirmation email
         user_register(params)
 
         return jsonify({

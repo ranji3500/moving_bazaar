@@ -70,7 +70,7 @@ def send_registration_email(receiver_email,otp):
     msg.add_alternative(html_body, subtype='html')
 
     # Attach logo (uploaded earlier)
-    logo_path = r"web_routes/movingbazaar_logo.png"
+    logo_path = r"D:\today26\moving_bazaar-main\web_routes\movingbazaar_logo.png"
     try:
         with open(logo_path, 'rb') as img:
             maintype, subtype = mimetypes.guess_type(logo_path)[0].split('/')
@@ -89,3 +89,10 @@ def send_registration_email(receiver_email,otp):
         print(f"❌ Failed to send email: {e}")
         return None
 
+
+# Example usage
+if __name__ == "__main__":
+    user_email = "ranji3500@gmail.com"
+    otp = send_registration_email(user_email)
+    if otp:
+        print(f"Generated OTP: {otp}")

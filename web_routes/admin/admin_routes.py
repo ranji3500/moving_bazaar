@@ -625,7 +625,7 @@ def insert_customer():
             }), 400
 
         # Prepare stored procedure call
-        procedure_name = "insert_customer"
+        procedure_name = "insert_customer_admin"
         params = (
             store_name,
             email,
@@ -982,28 +982,48 @@ def get_order_details_by_status(userid):  # ✅ Add parameter here
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@admin_bp.route('/get_order_summary/<int:order_id>', methods=['GET'])
+@admin_bp.route('/get_order_summary', methods=['POST'])
 @jwt_required()
-def get_order_summary(order_id):
-    logger.info("Admin requested order summary for order_id: %s", order_id)
-
+def get_order_summary():
     try:
-        procedure_name = "GetOrderSummaryDetails"
-        result = db.call_procedure(procedure_name, [order_id])
+        data = request.get_json()
+        order_id = data.get('order_id')
 
-        if result and len(result[0]) > 0:
-            logger.info("Order summary retrieved for order_id %s. Rows: %d", order_id, len(result[0]))
+        if not order_id:
+            return jsonify({"error": "Missing 'order_id' in request body"}), 400
+
+        logger.info("Admin requested order summary for order_id: %s", order_id)
+
+        procedure_name = "GetOrderSummaryDetails"
+        result_sets = db.call_procedure(procedure_name, [order_id])
+
+        parsed_data = {}
+
+        if result_sets:
+            for row in result_sets:  # Assuming only 1 result set with multiple rows
+                section = row.get("section")
+                json_data = row.get("data")
+
+                try:
+                    parsed_json = json.loads(json_data)
+                except Exception as e:
+                    logger.warning("JSON parsing failed for section %s: %s", section, str(e))
+                    parsed_json = json_data  # Keep raw if JSON is invalid
+
+                parsed_data[section] = parsed_json
+
+            logger.info("Parsed and structured order summary for order_id %s", order_id)
             return jsonify({
-                "data": result,
+                "data": parsed_data,
                 "message": "Order summary retrieved successfully"
             }), 200
+
         else:
-            logger.warning("No summary found for order_id: %s", order_id)
             return jsonify({"message": f"No summary found for order_id {order_id}"}), 404
 
     except Exception as e:
-        logger.error("Error fetching order summary for order_id %s: %s", order_id, str(e), exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        logger.error("Error fetching order summary: %s", str(e), exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
 @admin_bp.route('/get_order_documents', methods=['GET'])
 @jwt_required()
