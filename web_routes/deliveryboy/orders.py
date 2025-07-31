@@ -600,7 +600,6 @@ def updatedeliverorder():
     except Exception as e:
         return jsonify({"message": f"Internal Server Error: {str(e)}"}), 500
 
-
 @orders_bp.route('/getdraftorderdetails', methods=['POST'])
 @jwt_required()
 def get_draft_order_details():
@@ -613,7 +612,6 @@ def get_draft_order_details():
             return jsonify({"status": "Failure", "message": "Missing or invalid JSON data."}), 400
 
         order_status = data.get("orderStatus", None)
-        order_id = data.get("searchQuery", None)
         page_number = int(data.get("pageNumber", 1))
         page_size = int(data.get("pageSize", 10))
 
@@ -624,6 +622,9 @@ def get_draft_order_details():
         params = (order_status, page_number, page_size, employee_id)
         result = db.call_procedure(procedure_name, params)
 
+        # Debug: Print the structure of the result
+        print("[DEBUG] Procedure result:", result)
+
         if not result or len(result) < 2:
             return jsonify({"status": "Failure", "message": "Unexpected procedure output"}), 500
 
@@ -632,10 +633,15 @@ def get_draft_order_details():
             return jsonify({"status": "Failure", "message": "Missing totalRecords from result"}), 500
 
         total_records = total_record_item["totalRecords"]
-        order_rows = [] if isinstance(result[1], list) and len(result[1]) == 1 and result[1][0].get("NULL") is None \
-            else result[1] if isinstance(result[1], list) \
-            else [result[1]] if isinstance(result[1], dict) and "orderId" in result[1] \
-            else []
+
+        # Make sure order_rows is always a list
+        order_result = result[1]
+        if isinstance(order_result, list):
+            order_rows = order_result
+        elif isinstance(order_result, dict) and order_result:  # Single row as dict
+            order_rows = [order_result]
+        else:
+            order_rows = []
 
         return jsonify({
             "data": {
@@ -649,5 +655,7 @@ def get_draft_order_details():
 
     except Exception as e:
         return jsonify({"status": "Failure", "message": str(e), "data": None}), 500
+
+
 
 

@@ -53,15 +53,6 @@ pip install -r requirements.txt
 
 ---
 
-### 4. Deactivate the Environment
-
-When you're done:
-
-```bash
-deactivate
-```
-
----
 
 ## 📁 Project Structure
 
