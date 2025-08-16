@@ -917,8 +917,8 @@ def delete_employee(emp_id):
         procedure_name = "DeleteEmployee"
         params = (emp_id,)
         rows_affected = db.insert_using_procedure(procedure_name, params)
-        if rows_affected > 0:
-            return jsonify({"message": "Employee deleted successfully"}), 200
+        if rows_affected:
+            return jsonify({"message": rows_affected['message']}), 200
         else:
             return jsonify({"message": "Employee not found"}), 404
     except Exception as e:

@@ -98,11 +98,16 @@ def verify_token():
                 "userId": int(user_id),
                 "userName": claims.get("userName"),
                 "email": claims.get("email"),
-                "userType": claims.get("user_type")
+                "userType": claims.get("user_type"),
+                "valid":True
             }
         }), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 401
+        return jsonify({
+            "message": "Token is invalid",
+            "valid": False
+        }), 201
+
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}

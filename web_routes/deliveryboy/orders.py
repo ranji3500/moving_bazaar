@@ -429,7 +429,7 @@ def getdeliverorderdetails():
         if not order_id:
             return jsonify({"Status": "Failure", "Message": "Missing or invalid 'order_id' in query parameters."}), 400
 
-        result = db.call_procedure("GetOrderAndStores", (order_id))
+        result = db.call_procedure("GetOrderAndStores", (order_id,))
         result = result[0]['result']
         order_data = json.loads(result)
 

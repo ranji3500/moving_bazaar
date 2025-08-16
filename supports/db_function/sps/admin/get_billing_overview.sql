@@ -6,7 +6,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_billing_overview`(
 )
 BEGIN
     SELECT 
-        b.billing_id AS billingId,
+        b.order_id AS order_id,
         CONCAT(sender.store_name, ' - ', receiver.store_name) AS billTitle,
         b.created_at AS createdAt,
         b.payment_status AS paymentStatus,
@@ -18,12 +18,14 @@ BEGIN
         b.delivery_date AS deliveryDate,
         b.receipt_pdf AS receiptFile,
         sender.store_name AS senderName,
-        receiver.store_name AS receiverName
+        receiver.store_name AS receiverName,
+        d.path as invoice
 
     FROM billing b
     JOIN orders o ON o.order_id = b.order_id
     JOIN customer sender ON o.sender_id = sender.customer_id
     JOIN customer receiver ON o.receiver_id = receiver.customer_id
+    Join documents d on d.order_id = b.order_id and d.catagory = "invoice"
     LEFT JOIN users emp ON emp.employeeid = b.paid_by
     WHERE 
         status_filter = 'All' OR b.payment_status = status_filter
