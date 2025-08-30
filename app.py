@@ -98,15 +98,15 @@ def verify_token():
                 "userId": int(user_id),
                 "userName": claims.get("userName"),
                 "email": claims.get("email"),
-                "userType": claims.get("user_type"),
-                "valid":True
+                "userType": claims.get("user_type")
             }
         }), 200
+
     except Exception as e:
         return jsonify({
             "message": "Token is invalid",
-            "valid": False
-        }), 201
+            "error": str(e)   # Optional: helpful for debugging
+        }), 401
 
 
 
@@ -190,7 +190,7 @@ def verify_otp():
     # Compare OTPs
     if str(otp_input) == str(stored_otp):  # Ensure string comparison
         cache.delete(email)  # Clean up OTP after successful validation
-        send_registration_email(email)  # Optional: send a welcome/confirmation email
+        send_registration_email(email,otp_input)  # Optional: send a welcome/confirmation email
         user_register(params)
 
         return jsonify({

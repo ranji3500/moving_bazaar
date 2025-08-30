@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Invoice - Spice Junction</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+:root{--blue:#1F66CC;--text:#222;--muted:#666;--line:#E6E6E6;
+--font:"Calibri","Inter","Helvetica Neue",Arial,sans-serif;}
+*{box-sizing:border-box;}
+body{font-family:var(--font);color:var(--text);margin:0;background:#f7f7f7;}
+.page{width:210mm;min-height:297mm;margin:12mm auto;background:#fff;border-radius:12px;
+box-shadow:0 6px 24px rgba(0,0,0,.08);padding:18mm 16mm;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:12mm;}
+.company h1{font-size:24pt;font-weight:600;margin:0;color:var(--blue);}
+.company .small{font-size:10.5pt;color:var(--muted);}
+.logo{width:54px;height:54px;border-radius:50%;background:#888;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:6mm 0 8mm;}
+.label{font-size:10.5pt;color:var(--blue);text-transform:uppercase;font-weight:700;margin-bottom:2mm;}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px;}
+.box .line{font-size:11pt;line-height:1.45;margin:0;}
+.dates{text-align:right;font-size:10.5pt;}
+.table{width:100%;border-collapse:collapse;font-size:11pt;border-radius:10px;overflow:hidden;}
+.table thead th{background:var(--blue);color:#fff;text-transform:uppercase;font-weight:700;padding:8px;}
+.table td{padding:8px;border-bottom:1px solid var(--line);}
+.table td.num{text-align:right;}
+.table td.desc{width:60%;}
+.totals{width:50%;margin-left:auto;margin-top:8mm;font-size:11pt;}
+.totals .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+.totals .row:last-child{border-bottom:none;}
+.balance{font-weight:700;color:var(--blue);font-size:12.5pt;}
+.note{margin-top:10mm;font-size:10.5pt;color:var(--muted);}
+.footer{margin-top:10mm;font-size:9.5pt;color:var(--muted);}
+@media print{ body{background:#fff;} .page{box-shadow:none;margin:0;border-radius:0;} }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="company">
+        <h1>Spice Junction</h1>
+        <div class="small">21, Linking Road, Bandra, Mumbai</div>
+        <div class="small">spice.junction@exampljue.com · 87654321</div>
+      </div>
+      <div class="dates">
+        <div class="logo">LOGO</div>
+        <p><b>Invoice Date:</b> 24-Aug-2025<br/>
+        <b>Due Date:</b> 31-Aug-2025</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box">
+        <div class="label">Bill To</div>
+        <p class="line"><b>Spice Junction</b></p>
+        <p class="line">21, Linking Road, Bandra, Mumbai</p>
+        <p class="line">spice.junction@exampljue.com · 87654321</p>
+      </div>
+      <div class="box">
+        <div class="label">Location</div>
+        <p class="line"><b>Vignesh Store</b></p>
+        <p class="line">123 Street, Area A, New York</p>
+        <p class="line">vignesh@example.com · 12345678</p>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">₹5,100.00</td>
+          <td class="num">₹10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">₹5,100.00</td>
+          <td class="num">₹10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">₹5,100.00</td>
+          <td class="num">₹10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">₹5,100.00</td>
+          <td class="num">₹10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">₹45.00</td>
+          <td class="num">₹90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">₹45.00</td>
+          <td class="num">₹90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">₹45.00</td>
+          <td class="num">₹90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">₹45.00</td>
+          <td class="num">₹90.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="row"><span><b>Subtotal</b></span><span>₹41,960.00</span></div>
+      <div class="row"><span><b>Discount</b></span><span>₹0.00</span></div>
+      <div class="row"><span><b>Tax Rate</b></span><span>0%</span></div>
+      <div class="row"><span><b>Total Tax</b></span><span>₹0.00</span></div>
+      <div class="row"><span class="balance">Balance Due</span><span class="balance">₹41,960.00</span></div>
+    </div>
+
+    <div class="note"><b>Terms & Instructions:</b> Amount to be paid by the Sender - Spice Junction</div>
+    <div class="footer">Thank you for your business.</div>
+  </div>
+</body>
+</html>

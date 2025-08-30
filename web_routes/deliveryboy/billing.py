@@ -2,6 +2,7 @@ from flask import jsonify, request
 from . import billing_bp
 from supports.db_function import db
 from supports.pdf_creation import generate_invoice
+from supports.invoice_pdf import pdf_invoice
 from logger_config import setup_logger
 from flask_jwt_extended import jwt_required, get_jwt
 import os
@@ -133,14 +134,13 @@ def close_outstanding_balances():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
-# Background invoice generation
 def generate_invoice_background(order_id):
     try:
         invoice_result = db.call_procedure("sp_get_invoice_json", (order_id,))
         if not invoice_result or not invoice_result[0]:
             raise ValueError("Invoice generation failed: empty data")
 
-        import json, os
+        import os
         from datetime import datetime
 
         invoice_json_str = invoice_result[0][0]
@@ -152,11 +152,21 @@ def generate_invoice_background(order_id):
         os.makedirs(documents_dir, exist_ok=True)
         pdf_path = os.path.join(documents_dir, filename)
 
-        generate_invoice(invoice_data, pdf_path)
-        logger.info(f"Invoice generated at: {pdf_path}")
+        # Generate PDF
+        pdf_path_ = pdf_invoice(invoice_data, pdf_path)
+
+        # ✅ Prepare JSON array for paths
+        paths_json = json.dumps([pdf_path_])   # ["path1", "path2", ...]
+
+        # ✅ Call procedure with JSON array
+        params = (order_id, paths_json, "invoice")
+        insert_invoice = db.insertall_using_procedure("insertDocument", params)
+
+        logger.info(f"Invoice generated at: {pdf_path_}, DB insert result: {insert_invoice}")
 
     except Exception as invoice_error:
         logger.warning(f"Invoice generation failed for order {order_id}: {invoice_error}")
+
 
 @billing_bp.route('/insertbillingdetails', methods=['POST'])
 @jwt_required()
