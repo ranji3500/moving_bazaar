@@ -287,30 +287,34 @@ def export_pdf(html: str, pdf_path: Path, *, width: str = None, height: str = No
         )
         browser.close()
 
-def create_thermal_invoice_pdf(data: dict,
-                               output_dir:  Path = "documents",
-                               order_id: str  = None) -> Path:
+from pathlib import Path
+
+def create_thermal_invoice_pdf(
+    data: dict,
+    output_dir: Path = Path("documents"),
+    order_id: str = None,
+    filename: str = None
+) -> Path:
     """
     Builds the thermal (80mm) invoice, writes PDF into `output_dir`,
     deletes the temporary HTML, and returns the final PDF Path.
     """
-    logo_path: Path = "web_routes/logo.png",
+    # ✅ Fix: remove trailing comma → ensures it's a Path, not tuple
+    logo_path: Path = Path("web_routes/logo.png")
 
     docs_dir = Path(output_dir)
     docs_dir.mkdir(parents=True, exist_ok=True)
-
-    # order id for filename
-    oid = (order_id or get_order_id(data)).strip()
-    now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_name = f"{oid}_{now_str}_invoice"
 
     # logo (data URL)
     logo_url = logo_data_url(logo_path)
 
     # build HTML and write temp file
+    if not filename:
+        filename = f"invoice_{order_id}"
+
     html_80 = build_html_thermal_80mm(data, logo_url)
-    html_path = docs_dir / f"{base_name}.html"
-    pdf_path  = docs_dir / f"{base_name}.pdf"
+    html_path = docs_dir / f"{filename}.html"
+    pdf_path  = docs_dir / f"{filename}.pdf"
 
     html_path.write_text(html_80, encoding="utf-8")
 
@@ -319,25 +323,25 @@ def create_thermal_invoice_pdf(data: dict,
         html_80,
         pdf_path,
         width="80mm",
-        margin={"top":"0","right":"0","bottom":"0","left":"0"},
+        margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
         print_background=True,
     )
 
     # remove the temp HTML (safe even if already missing)
     try:
-        html_path.unlink(missing_ok=True)  # Py3.8+
+        html_path.unlink(missing_ok=True)  # Python 3.8+
     except TypeError:
-        # for older Python versions
         if html_path.exists():
             html_path.unlink()
 
     return pdf_path
 
 
-def pdf_invoice(DATA,output_dir):
+def pdf_invoice(DATA,output_dir,filename):
     pdf_path = create_thermal_invoice_pdf(
         data=DATA,
         output_dir=output_dir,
+        filename = filename
     )
     print("✅ PDF written:")
     print(f" - {pdf_path}")

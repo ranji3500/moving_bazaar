@@ -8,6 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt
 import os
 import json
 import threading
+from datetime import datetime as pdftime
 
 # Set up logger for billing
 log_file = os.path.join(os.getcwd(), 'logs', 'billing.log')
@@ -136,36 +137,41 @@ def close_outstanding_balances():
 
 def generate_invoice_background(order_id):
     try:
+        # ✅ Step 1: Fetch invoice data
         invoice_result = db.call_procedure("sp_get_invoice_json", (order_id,))
         if not invoice_result or not invoice_result[0]:
-            raise ValueError("Invoice generation failed: empty data")
+            raise ValueError("Invoice generation failed: empty data from DB")
 
-        import os
-        from datetime import datetime
+        invoice_json_str = invoice_result[0].get("invoice_data")
+        if not invoice_json_str:
+            raise ValueError("No invoice_data returned for order")
 
-        invoice_json_str = invoice_result[0][0]
         invoice_data = json.loads(invoice_json_str)
 
-        today_str = datetime.now().strftime("%Y%m%d")
+
+        # ✅ Step 2: Build file path
+        today_str = pdftime.now().strftime("%Y%m%d")
         filename = f"invoice_{order_id}_{today_str}.pdf"
         documents_dir = os.path.join(os.getcwd(), "documents")
         os.makedirs(documents_dir, exist_ok=True)
         pdf_path = os.path.join(documents_dir, filename)
 
-        # Generate PDF
-        pdf_path_ = pdf_invoice(invoice_data, pdf_path)
+        # ✅ Step 3: Generate PDF
+        pdf_path_ = pdf_invoice(invoice_data, documents_dir,filename)
+        if not pdf_path_ or not os.path.exists(pdf_path_):
+            raise ValueError("PDF generation failed: file not found")
 
-        # ✅ Prepare JSON array for paths
-        paths_json = json.dumps([pdf_path_])   # ["path1", "path2", ...]
-
-        # ✅ Call procedure with JSON array
+        # ✅ Step 4: Insert into DB with JSON array
+        paths_json = json.dumps([pdf_path_])
         params = (order_id, paths_json, "invoice")
         insert_invoice = db.insertall_using_procedure("insertDocument", params)
 
-        logger.info(f"Invoice generated at: {pdf_path_}, DB insert result: {insert_invoice}")
+        logger.info(f"✅ Invoice generated at: {pdf_path_}, DB insert result: {insert_invoice}")
+        return pdf_path_
 
-    except Exception as invoice_error:
-        logger.warning(f"Invoice generation failed for order {order_id}: {invoice_error}")
+    except Exception as e:
+        logger.warning(f"❌ Invoice generation failed for order {order_id}: {e}", exc_info=True)
+        return None
 
 
 @billing_bp.route('/insertbillingdetails', methods=['POST'])
