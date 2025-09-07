@@ -66,7 +66,7 @@ def send_invoice_email(
 
     print("✅ Email sent successfully.")
 
-# 🔧 Call the function
-send_invoice_email(
-    to_email=["ranji3500@gmail.com", "mbsystemuser@gmail.com"]
-)
+# # 🔧 Call the function
+# send_invoice_email(
+#     to_email=["ranji3500@gmail.com", "mbsystemuser@gmail.com"]
+# )
