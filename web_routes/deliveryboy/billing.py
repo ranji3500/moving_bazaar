@@ -154,17 +154,14 @@ def generate_invoice_background(order_id):
         filename = f"invoice_{order_id}_{today_str}.pdf"
         documents_dir = os.path.join(os.getcwd(), "documents")
         os.makedirs(documents_dir, exist_ok=True)
-        pdf_path = os.path.join(documents_dir, filename)
-
         # ✅ Step 3: Generate PDF
         pdf_path_ = pdf_invoice(invoice_data, documents_dir,filename)
         if not pdf_path_ or not os.path.exists(pdf_path_):
             raise ValueError("PDF generation failed: file not found")
 
-        # ✅ Step 4: Insert into DB with JSON array
-        paths_json = json.dumps([pdf_path_])
+        paths_json = json.dumps(filename)  # <-- JSON string
         params = (order_id, paths_json, "invoice")
-        insert_invoice = db.insertall_using_procedure("insertDocument", params)
+        db.insertall_using_procedure("insertDocument", params)
 
         logger.info(f"✅ Invoice generated at: {pdf_path_}, DB insert result: {insert_invoice}")
         return pdf_path_
