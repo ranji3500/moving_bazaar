@@ -346,7 +346,7 @@ def pdf_invoice(DATA,output_dir,filename):
     print("✅ PDF written:")
     print(f" - {pdf_path}")
 
-    return pdf_path
+    return pdf_path ,filename
 
 # if __name__ == "__main__":
 #     pdf_invoice()

@@ -151,19 +151,20 @@ def generate_invoice_background(order_id):
 
         # ✅ Step 2: Build file path
         today_str = pdftime.now().strftime("%Y%m%d")
-        filename = f"invoice_{order_id}_{today_str}.pdf"
+        filename = f"invoice_{order_id}_{today_str}"
         documents_dir = os.path.join(os.getcwd(), "documents")
         os.makedirs(documents_dir, exist_ok=True)
         # ✅ Step 3: Generate PDF
-        pdf_path_ = pdf_invoice(invoice_data, documents_dir,filename)
+        pdf_path_,filenames = pdf_invoice(invoice_data, documents_dir,filename)
         if not pdf_path_ or not os.path.exists(pdf_path_):
             raise ValueError("PDF generation failed: file not found")
 
-        paths_json = json.dumps(filename)  # <-- JSON string
+
+        paths_json = json.dumps(filenames)  # <-- JSON string
         params = (order_id, paths_json, "invoice")
         db.insertall_using_procedure("insertDocument", params)
 
-        logger.info(f"✅ Invoice generated at: {pdf_path_}, DB insert result: {insert_invoice}")
+        logger.info(f"✅ Invoice generated at: {pdf_path_}")
         return pdf_path_
 
     except Exception as e:

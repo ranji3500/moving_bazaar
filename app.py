@@ -1,212 +1,265 @@
-from flask import Flask,send_from_directory
-from web_routes.deliveryboy import commodities_bp ,employee_bp,orders_bp,billing_bp,customers_bp
-from web_routes.admin import admin_bp
+import os
+import logging
+import random
+from datetime import timedelta
+from typing import Optional
+
+from flask import Flask, request, jsonify, send_from_directory, abort
 from flask_caching import Cache
-import os ,random
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+
+from flask_jwt_extended import (
+    JWTManager,
+    get_jwt_identity,
+    get_jwt,
+    jwt_required,
+)
+
+# --- Blueprints (your existing modules) --------------------------------------
+from web_routes.deliveryboy import (
+    commodities_bp,
+    employee_bp,
+    orders_bp,
+    billing_bp,
+    customers_bp,
+)
+from web_routes.admin import admin_bp
 from web_routes.welcomegretting import send_welcome_email
 from web_routes.registergretting import send_registration_email
-os.makedirs("logs", exist_ok=True)
 from web_routes.signup import user_register
 
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required,get_jwt
+# --- Basic setup --------------------------------------------------------------
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("app")
 
-app = Flask(__name__, static_folder='dist')
+# --- App factory (simple single-file pattern) ---------------------------------
+app = Flask(__name__, static_folder="dist")
 
-
-# Configure cache (you can switch to Redis in production)
-app.config['CACHE_TYPE'] = 'SimpleCache'
-app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # OTP valid for 5 minutes
+# Cache (swap to Redis in prod)
+app.config["CACHE_TYPE"] = "SimpleCache"
+app.config["CACHE_DEFAULT_TIMEOUT"] = 300  # default 5 min
 cache = Cache(app)
 
-
-app.config['JWT_SECRET_KEY'] = 'mov_123ywdhbsdjsdfs'
+# Security / JWT
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-only-change-me")
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
-
-# Set the upload folder path
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'documents')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-# Optional: Limit upload size (e.g., 16MB max)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
-# Ensure the folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-
+# Optional: set token expiry if you mint tokens here
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 jwt = JWTManager(app)
-app.register_blueprint(employee_bp, url_prefix='/employee')
-app.register_blueprint(commodities_bp, url_prefix='/commodities')
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(customers_bp, url_prefix='/customers')
-app.register_blueprint(orders_bp, url_prefix='/orders')
-app.register_blueprint(billing_bp, url_prefix='/billing')
 
+# Uploads
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "documents")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
 
-CORS(app,
-     resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:5173"]}},
-     supports_credentials=True)
+# CORS
+FRONTEND_ORIGINS = os.getenv(
+    "FRONTEND_ORIGINS",
+    "http://localhost:3000,http://localhost:5173",
+).split(",")
+CORS(
+    app,
+    resources={r"/*": {"origins": FRONTEND_ORIGINS}},
+    supports_credentials=True,
+)
 
+# --- Helpers ------------------------------------------------------------------
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-import jwt
-from flask import request, jsonify
+def maybe_int(value: Optional[str]):
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return value
 
-# Replace with your actual secret key used to sign the JWTs
-JWT_SECRET = 'your-secret-key'
-JWT_ALGORITHM = 'HS256'
+def json_error(message: str, code: int):
+    return jsonify({"status": "Failure", "message": message}), code
 
-def decode_jwt_from_header():
-    auth_header = request.headers.get('Authorization', None)
-    if not auth_header or not auth_header.startswith('Bearer '):
-        raise Exception('Authorization header is missing or invalid')
+# --- Health check -------------------------------------------------------------
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
 
-    token = auth_header.split(" ")[1]
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise Exception('Token expired')
-    except jwt.InvalidTokenError:
-        raise Exception('Invalid token')
-
-# Serve static files (JS, CSS, etc.)
-@app.route('/static/<path:filename>')
+# --- Static / SPA -------------------------------------------------------------
+@app.route("/static/<path:filename>")
 def static_files(filename):
-    return send_from_directory(os.path.join(app.static_folder, 'static'), filename)
+    return send_from_directory(os.path.join(app.static_folder, "static"), filename)
 
-# Catch-all route for SPA
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
 def serve_react_app(path):
     file_path = os.path.join(app.static_folder, path)
-    if path != "" and os.path.exists(file_path):
+    if path and os.path.exists(file_path):
         return send_from_directory(app.static_folder, path)
-    else:
-        # Serve index.html for React routing
-        return send_from_directory(app.static_folder, 'index.html')
+    return send_from_directory(app.static_folder, "index.html")
 
-
-
-@app.route('/verify_token', methods=['GET'])
-@jwt_required()  # ✅ This validates the token
+# --- JWT: Verify token via flask-jwt-extended --------------------------------
+@app.get("/verify_token")
+@jwt_required()
 def verify_token():
     try:
-        user_id = get_jwt_identity()  # ✅ Retrieves `employee_id`
-        claims = get_jwt()  # ✅ Retrieves additional claims
-
+        user_id = get_jwt_identity()               # set when you created the token
+        claims = get_jwt()                          # additional claims if you added
         return jsonify({
             "message": "Token is valid",
             "data": {
-                "userId": int(user_id),
+                "userId": maybe_int(user_id),
                 "userName": claims.get("userName"),
                 "email": claims.get("email"),
-                "userType": claims.get("user_type")
-            }
+                "userType": claims.get("user_type"),
+            },
         }), 200
-
     except Exception as e:
-        return jsonify({
-            "message": "Token is invalid",
-            "error": str(e)   # Optional: helpful for debugging
-        }), 401
+        logger.exception("verify_token failed")
+        return jsonify({"message": "Token is invalid", "error": str(e)}), 401
 
+# --- OTP flow -----------------------------------------------------------------
+def generate_otp(length: int = 6) -> str:
+    return "".join(str(random.randint(0, 9)) for _ in range(length))
 
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def generate_otp(length=6):
-    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
-
-
-# 1. Send OTP
-@app.route('/send_otp', methods=['POST'])
+@app.post("/send_otp")
 def send_otp():
-    data = request.get_json()
-    full_name = data.get('fullName')
-    email = data.get('email')
+    data = request.get_json(silent=True) or {}
+    full_name = data.get("fullName")
+    email = data.get("email")
 
     if not full_name or not email:
-        return jsonify({
-            'status': 'Failure',
-            'message': 'fullName and email are required'
-        }), 400
+        return json_error("fullName and email are required", 400)
 
     otp = generate_otp()
+    # store with explicit TTL (uses CACHE_DEFAULT_TIMEOUT if not provided)
+    cache.set(email, otp, timeout=300)
 
-    # 🔐 Store OTP with expiry (if supported by your cache)
-    cache.set(email, otp)  # If using dict, this will just store it directly
-
-    # 📨 Simulate or send email
-    send_registration_email(email, otp)
-
-    # 🐞 Debug info
-    print(f"[DEBUG] OTP for {email}: {otp}")
-    print(f"[INFO] Simulating OTP sent to email: {email}")
+    try:
+        send_registration_email(email, otp)
+        logger.info("OTP generated for %s: %s", email, otp)
+    except Exception as e:
+        logger.exception("Failed to send registration email")
+        return json_error(f"Failed to send OTP email: {e}", 500)
 
     return jsonify({
-        'status': 'Success',
-        'message': f'OTP sent to {full_name} at {email}'
+        "status": "Success",
+        "message": f"OTP sent to {full_name} at {email}",
     }), 200
 
-
-# 2. Verify OTP
-@app.route('/verify_otp', methods=['POST'])
+@app.post("/verify_otp")
 def verify_otp():
-    data = request.get_json()
-
-    email = data.get('email')
-    otp_input = data.get('otp')
-    fullName = data.get('fullName')
-    password = data.get('password')
-    phone = data.get('phone')
+    data = request.get_json(silent=True) or {}
+    email = data.get("email")
+    otp_input = data.get("otp")
+    full_name = data.get("fullName")
+    password = data.get("password")
+    phone = data.get("phone")
 
     if not email or not otp_input:
-        return jsonify({
-            'status': 'Failure',
-            'message': 'Email and OTP are required.'
-        }), 400
+        return json_error("Email and OTP are required.", 400)
 
-    # Fetch OTP from cache (like Redis)
     stored_otp = cache.get(email)
-
     if stored_otp is None:
-        return jsonify({
-            'status': 'Failure',
-            'message': 'OTP expired or not found.'
-        }), 400
+        return json_error("OTP expired or not found.", 400)
 
-    params = (
-        fullName,
-        email,
-        phone,
-        password,
-        "profile.jpg",
-        1,
-        "client"
-    )
+    if str(otp_input) != str(stored_otp):
+        return json_error("Invalid OTP.", 401)
 
-    # Compare OTPs
-    if str(otp_input) == str(stored_otp):  # Ensure string comparison
-        cache.delete(email)  # Clean up OTP after successful validation
-        send_registration_email(email,otp_input)  # Optional: send a welcome/confirmation email
+    # OTP success — clean up
+    cache.delete(email)
+
+    # Register user (your implementation)
+    try:
+        params = (
+            full_name,
+            email,
+            phone,
+            password,
+            "profile.jpg",
+            1,            # company_id or similar
+            "client",     # role
+        )
         user_register(params)
+        # Send a welcome email (different template from registration/OTP)
+        send_welcome_email(email)
+    except Exception as e:
+        logger.exception("User registration failed")
+        return json_error(f"Registration failed: {e}", 500)
 
-        return jsonify({
-            'status': 'Success',
-            'message': 'OTP verified successfully ✅'
-        }), 200
-    else:
-        return jsonify({
-            'status': 'Failure',
-            'message': 'Invalid OTP ❌'
-        }), 401
+    return jsonify({"status": "Success", "message": "OTP verified successfully ✅"}), 200
 
+# --- Secure upload endpoint ---------------------------------------------------
+@app.post("/upload")
+@jwt_required()
+def upload_file():
+    if "file" not in request.files:
+        return json_error("No file part in request.", 400)
 
-if __name__ == '__main__':
-    app.run(host='localhost', port=5008, threaded=True,debug =True)
+    file = request.files["file"]
+    if file.filename == "":
+        return json_error("No selected file.", 400)
 
+    if not allowed_file(file.filename):
+        return json_error(f"File type not allowed. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}", 400)
 
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
+    # Avoid overwrite: append a counter if exists
+    base, ext = os.path.splitext(filename)
+    counter = 1
+    while os.path.exists(save_path):
+        filename = f"{base}_{counter}{ext}"
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        counter += 1
 
+    try:
+        file.save(save_path)
+    except Exception as e:
+        logger.exception("File save failed")
+        return json_error(f"Failed to save file: {e}", 500)
+
+    return jsonify({
+        "status": "Success",
+        "message": "File uploaded.",
+        "filename": filename,
+        "path": f"/documents/{filename}",
+    }), 201
+
+@app.get("/documents/<path:filename>")
+@jwt_required()
+def get_document(filename):
+    safe_name = secure_filename(filename)
+    full_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
+    if not os.path.exists(full_path):
+        abort(404)
+    return send_from_directory(app.config["UPLOAD_FOLDER"], safe_name)
+
+# --- Blueprints ---------------------------------------------------------------
+app.register_blueprint(employee_bp, url_prefix="/employee")
+app.register_blueprint(commodities_bp, url_prefix="/commodities")
+app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(customers_bp, url_prefix="/customers")
+app.register_blueprint(orders_bp, url_prefix="/orders")
+app.register_blueprint(billing_bp, url_prefix="/billing")
+
+# --- Error handlers -----------------------------------------------------------
+@app.errorhandler(413)
+def too_large(_e):
+    return json_error("File too large. Max 16MB.", 413)
+
+@app.errorhandler(404)
+def not_found(_e):
+    return json_error("Not found.", 404)
+
+@app.errorhandler(Exception)
+def unhandled(e):
+    logger.exception("Unhandled error")
+    return json_error(f"Server error: {e}", 500)
+
+# --- Entrypoint ---------------------------------------------------------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5008, threaded=True, debug=True)
