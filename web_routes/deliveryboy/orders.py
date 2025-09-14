@@ -328,6 +328,7 @@ def get_order_summary():
         return jsonify({"data": None, "Message": str(e)}), 500
 
 
+
 @orders_bp.route('/getorderdeliverdetails', methods=['POST'])
 @jwt_required()
 def get_order_delivery_details():
@@ -429,7 +430,7 @@ def getdeliverorderdetails():
         if not order_id:
             return jsonify({"Status": "Failure", "Message": "Missing or invalid 'order_id' in query parameters."}), 400
 
-        result = db.call_procedure("GetOrderAndStores", (order_id,))
+        result = db.call_procedure("GetOrderAndStores", (order_id))
         result = result[0]['result']
         order_data = json.loads(result)
 
@@ -440,6 +441,7 @@ def getdeliverorderdetails():
 
     except Exception as e:
         return jsonify({"data": None, "message": str(e)}), 500
+
 
 
 @orders_bp.route('/insertdocuments', methods=['POST'])
