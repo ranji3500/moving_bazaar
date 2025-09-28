@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from supports.db_function import db
 from . import commodities_bp
-
+from logger_configuration import logger
 
 # 📌 1⃣️ Insert a New Commodity
 @commodities_bp.route('/createcommodity', methods=['POST'])
@@ -10,9 +10,12 @@ from . import commodities_bp
 def create_commodity():
     claims = get_jwt()
     employee_id = claims.get("sub")
-
     data = request.json
+
     try:
+        logger.info(f"User {employee_id} requested to create a commodity")
+        logger.debug(f"Request data: {data}")
+
         procedure_name = "insertCommodity"
         params = (
             data.get('itemName'),
@@ -25,10 +28,11 @@ def create_commodity():
         )
         result = db.insert_using_procedure(procedure_name, params)
 
-        if result:
-            return jsonify(result), 200
+        logger.info(f"Commodity created successfully by user {employee_id}: {result}")
+        return jsonify(result), 200
 
     except Exception as e:
+        logger.exception(f"Error while creating commodity by user {employee_id}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -38,9 +42,12 @@ def create_commodity():
 def update_commodity(commodityId):
     claims = get_jwt()
     employee_id = claims.get("sub")
-
     data = request.json
+
     try:
+        logger.info(f"User {employee_id} requested to update commodity {commodityId}")
+        logger.debug(f"Update data: {data}")
+
         procedure_name = "updateCommodity"
         params = (
             commodityId,
@@ -54,9 +61,11 @@ def update_commodity(commodityId):
         )
         result = db.insert_using_procedure(procedure_name, params)
 
+        logger.info(f"Commodity {commodityId} updated successfully by user {employee_id}")
         return jsonify(result), 200
 
     except Exception as e:
+        logger.exception(f"Error while updating commodity {commodityId} by user {employee_id}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -68,13 +77,17 @@ def delete_commodity(commodityId):
     employee_id = claims.get("sub")
 
     try:
+        logger.info(f"User {employee_id} requested to delete commodity {commodityId}")
+
         procedure_name = "deleteCommodity"
         params = (commodityId, employee_id)
         result = db.insert_using_procedure(procedure_name, params)
 
+        logger.info(f"Commodity {commodityId} deleted successfully by user {employee_id}")
         return jsonify(result), 200
 
     except Exception as e:
+        logger.exception(f"Error while deleting commodity {commodityId} by user {employee_id}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -86,17 +99,21 @@ def get_commodity(commodityId):
     employee_id = claims.get("sub")
 
     try:
+        logger.info(f"User {employee_id} requested commodity details for ID {commodityId}")
+
         procedure_name = "getCommodityById"
         params = (commodityId, employee_id)
         result = db.call_procedure(procedure_name, params)
 
         if result:
-            commodity = result
-            return jsonify(commodity), 200
+            logger.info(f"Commodity {commodityId} retrieved successfully by user {employee_id}")
+            return jsonify(result), 200
 
+        logger.warning(f"Commodity {commodityId} not found for user {employee_id}")
         return jsonify({"message": "Commodity not found"}), 404
 
     except Exception as e:
+        logger.exception(f"Error while retrieving commodity {commodityId} by user {employee_id}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -108,20 +125,25 @@ def get_commodities():
     employee_id = claims.get("sub")
 
     try:
+        logger.info(f"User {employee_id} requested commodity list")
+
         procedure_name = "getCommoditiesList"
         params = (employee_id,)
         result = db.call_procedure(procedure_name)
 
         if result:
+            logger.info(f"Commodity list retrieved successfully for user {employee_id}, count={len(result)}")
             return jsonify({
                 "data": result,
-                "message": "Commodity details has been fetched successfully"
+                "message": "Commodity details have been fetched successfully"
             }), 200
 
+        logger.warning(f"No commodities found for user {employee_id}")
         return jsonify({
             "data": None,
             "message": "No commodities found"
         }), 404
 
     except Exception as e:
+        logger.exception(f"Error while fetching commodities for user {employee_id}")
         return jsonify({"error": str(e)}), 500

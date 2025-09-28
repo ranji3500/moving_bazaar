@@ -4,6 +4,7 @@ from web_routes.deliveryboy import employee_bp
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from flask_jwt_extended import jwt_required, get_jwt
+from logger_configuration import logger
 import random
 import time
 
@@ -13,13 +14,19 @@ import time
 def index():
     return "employee server is running"
 
-# CREATE Employee
 @employee_bp.route('/create_customer', methods=['POST'])
 @jwt_required()
 def create_customer():
     data = request.json
     claims = get_jwt()
     user_id = claims.get('sub')
+
+    logger.info("Create customer request received | user_id=%s | data=%s", user_id, data)
+
+    if not data.get('storeName') or not data.get('email') or not data.get('phoneNumber'):
+        logger.warning("Missing required fields for create_customer | user_id=%s | data=%s", user_id, data)
+        return jsonify({"error": "storeName, email, and phoneNumber are required"}), 400
+
     try:
         procedure_name = "insert_customer"
         params = (
@@ -34,21 +41,31 @@ def create_customer():
             data.get('outstandingPrice', 0.00)
         )
         rows_affected = db.insert_using_procedure(procedure_name, params)
-        return jsonify({"message": rows_affected}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
+        # Log success
+        logger.info(
+            "Customer created successfully | user_id=%s | storeName=%s | rows_affected=%s",
+            user_id, data.get('storeName'), rows_affected
+        )
+
+        return jsonify({"message": rows_affected}), 201
+
+    except Exception as e:
+        logger.exception("Exception while creating customer | user_id=%s | data=%s", user_id, data)
+        return jsonify({"error": "Internal server error"}), 500
+# UPDATE Employee
 # UPDATE Employee
 @employee_bp.route('/update_employee/<int:emp_id>', methods=['PUT'])
 @jwt_required()
 def update_employee(emp_id):
-    data = request.json
-    claims = get_jwt()
-    user_id = claims.get('userId')
-    user_name = claims.get('userName')
-    email = claims.get('email')
-    user_type = claims.get('user_type')
     try:
+        data = request.json
+        claims = get_jwt()
+        user_id = claims.get('userId')
+        user_name = claims.get('userName')
+        email = claims.get('email')
+        user_type = claims.get('user_type')
+
         procedure_name = "UpdateEmployee"
         params = (
             emp_id,
@@ -59,13 +76,28 @@ def update_employee(emp_id):
             data.get('profile_photo', None),
             data.get('is_admin', False)
         )
+
         rows_affected = db.insert_using_procedure(procedure_name, params)
+
         if rows_affected > 0:
+            logger.info(
+                "Employee updated successfully: emp_id=%s by user_id=%s email=%s",
+                emp_id, user_id, email
+            )
             return jsonify({"message": "Employee updated successfully"}), 200
         else:
+            logger.warning(
+                "Update failed, employee not found: emp_id=%s by user_id=%s email=%s",
+                emp_id, user_id, email
+            )
             return jsonify({"message": "Employee not found"}), 404
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.exception(
+            "Exception occurred while updating employee emp_id=%s by user_id=%s email=%s",
+            emp_id
+        )
+        return jsonify({"error": "Internal server error"}), 500
 
 # DELETE Employee
 @employee_bp.route('/delete_employee/<int:emp_id>', methods=['DELETE'])
@@ -77,15 +109,30 @@ def delete_employee(emp_id):
         user_name = claims.get('userName')
         email = claims.get('email')
         user_type = claims.get('user_type')
+
         procedure_name = "DeleteEmployee"
         params = (emp_id,)
         rows_affected = db.insert_using_procedure(procedure_name, params)
+
         if rows_affected > 0:
+            logger.info(
+                "Employee deleted successfully: emp_id=%s by user_id=%s email=%s",
+                emp_id, user_id, email
+            )
             return jsonify({"message": "Employee deleted successfully"}), 200
         else:
+            logger.warning(
+                "Delete failed, employee not found: emp_id=%s by user_id=%s email=%s",
+                emp_id, user_id, email
+            )
             return jsonify({"message": "Employee not found"}), 404
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.exception(
+            "Exception occurred while deleting employee emp_id=%s by user_id=%s email=%s",
+            emp_id
+        )
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @employee_bp.route('/login_employee', methods=['POST'])
@@ -96,6 +143,7 @@ def login_employee():
         password = data.get("password")
 
         if not email or not password:
+            logger.warning("Login attempt with missing email or password: %s", data)
             return jsonify({"message": "Email and password are required"}), 400
 
         procedure_name = "LoginEmployee"
@@ -103,10 +151,12 @@ def login_employee():
         result = db.call_procedure(procedure_name, params)
 
         if not result:
+            logger.warning("Invalid login attempt for email: %s", email)
             return jsonify({
                 "data": None,
                 "message": "Invalid login credentials"
             }), 401
+
         response_dict = result[0]
 
         if response_dict.get("result_status") == 1:
@@ -120,6 +170,8 @@ def login_employee():
                 },
                 expires_delta=timedelta(hours=2)
             )
+            logger.info("Login successful for employee_id=%s email=%s",
+                        response_dict["employee_id"], email)
 
             return jsonify({
                 "message": "Login successful",
@@ -133,36 +185,60 @@ def login_employee():
             }), 200
 
         else:
+            logger.warning("Login failed for email=%s: %s",
+                           email, response_dict.get("message"))
             return jsonify({
                 "data": None,
                 "message": response_dict.get("message", "Login failed")
             }), 401
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.exception("Exception occurred during login ")
+        return jsonify({"error": "Internal server error"}), 500
 
-# FORGOT PASSWORD
 @employee_bp.route('/forgot_password', methods=['POST'])
 @jwt_required()
 def forgot_password():
-    claims = get_jwt()
-    user_id = claims.get('userId')
-    user_name = claims.get('userName')
-    email = claims.get('email')
-    user_type = claims.get('user_type')
-    data = request.json
     try:
+        claims = get_jwt()
+        user_id = claims.get('userId')
+        user_name = claims.get('userName')
+        email_claim = claims.get('email')
+        user_type = claims.get('user_type')
+
+        data = request.json
+        email_input = data.get('email')
+        new_password = data.get('new_password')
+
+        if not email_input or not new_password:
+            logger.warning(
+                "Forgot password attempt with missing fields: user_id=%s, email=%s, data=%s",
+                user_id, email_claim, data
+            )
+            return jsonify({"message": "Email and new password are required"}), 400
+
         procedure_name = "ForgotPassword"
-        params = (data.get('email'), data.get('new_password'))
+        params = (email_input, new_password)
         rows_affected = db.insert_using_procedure(procedure_name, params)
+
         if rows_affected > 0:
+            logger.info(
+                "Password updated successfully for email=%s by user_id=%s",
+                email_input, user_id
+            )
             return jsonify({"message": "Password updated successfully"}), 200
         else:
+            logger.warning(
+                "Forgot password failed, email not found: email=%s by user_id=%s",
+                email_input, user_id
+            )
             return jsonify({"message": "Email not found"}), 404
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
+        logger.exception(
+            "Exception occurred during forgot password for user"
+        )
+        return jsonify({"error": "Internal server error"}), 500
 
 
 
