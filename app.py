@@ -72,15 +72,6 @@ CORS(
     resources={r"/*": {"origins": FRONTEND_ORIGINS}},
     supports_credentials=True,
 )
-
-
-
-
-
-
-
-
-
 # --- Helpers ------------------------------------------------------------------
 def allowed_file(filename: str) -> bool:
     logger.debug("allowed_file check for '%s'", filename)
@@ -153,6 +144,8 @@ def generate_otp(length: int = 6) -> str:
     otp = "".join(str(random.randint(0, 9)) for _ in range(length))
     logger.debug("Generated OTP: %s", otp)
     return otp
+
+
 @app.post("/send_otp")
 def send_otp():
     data = request.get_json(silent=True) or {}

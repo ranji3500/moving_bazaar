@@ -622,17 +622,18 @@ def get_image_by_filename(filename):
 
         upload_root = current_app.config['UPLOAD_FOLDER']
         for root, dirs, files in os.walk(upload_root):
-            if filename in files:
-                logger.info(f"[ORDERS][get_image_by_filename] File '{filename}' found, sending file")
-                return send_from_directory(root, filename)
+            for file in files:
+                file_name_no_ext, file_ext = os.path.splitext(file)
+                if filename == file or filename == file_name_no_ext:
+                    logger.info(f"[ORDERS][get_image_by_filename] File '{file}' found, sending file")
+                    return send_from_directory(root, file)
 
         logger.warning(f"[ORDERS][get_image_by_filename] File '{filename}' not found")
-        return jsonify({"status": "Failure", "message": f"Image '{filename}' not found."}), 404
+        return jsonify({"status": "Failure", "message": f"File '{filename}' not found."}), 404
 
     except Exception as e:
         logger.exception(f"[ORDERS][get_image_by_filename] Error fetching file '{filename}'")
         return jsonify({"status": "Error", "message": str(e)}), 500
-
 
 # 📌 Delete Document
 @orders_bp.route('/deletedocument/<doc_id>', methods=['DELETE'])

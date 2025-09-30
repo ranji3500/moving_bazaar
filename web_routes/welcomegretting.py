@@ -1,7 +1,10 @@
+
+
+import os
 import smtplib
+import mimetypes
 from email.message import EmailMessage
 from email.utils import make_msgid
-import mimetypes
 
 
 def send_welcome_email(receiver_email, user_name="User"):
@@ -9,7 +12,7 @@ def send_welcome_email(receiver_email, user_name="User"):
     app_password = "izqs uhon vasc cytq"
 
     signin_url = "https://www.movingbazaar.in/login"  # Replace with real login link
-    logo_cid = make_msgid(domain='movingbazaar.com')[1:-1]
+    logo_cid = make_msgid(domain="movingbazaar.com")[1:-1]
 
     html_body = f"""
     <html>
@@ -72,33 +75,35 @@ def send_welcome_email(receiver_email, user_name="User"):
     """
 
     msg = EmailMessage()
-    msg['Subject'] = "Welcome to MovingBazaar – Account Created"
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
+    msg["Subject"] = "Welcome to MovingBazaar – Account Created"
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
     msg.set_content("Please view this email in an HTML-compatible viewer.")
-    msg.add_alternative(html_body, subtype='html')
+    msg.add_alternative(html_body, subtype="html")
 
     # Attach the logo
-    logo_path = r"web_routes/movingbazaar_logo.png"
-    try:
-        with open(logo_path, 'rb') as img:
-            maintype, subtype = mimetypes.guess_type(logo_path)[0].split('/')
-            msg.get_payload()[1].add_related(img.read(), maintype=maintype, subtype=subtype, cid=logo_cid)
-    except FileNotFoundError:
+    logo_path = os.path.abspath("web_routes/movingbazaar_logo.png")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as img:
+            mime_type, _ = mimetypes.guess_type(logo_path)
+            if mime_type:
+                maintype, subtype = mime_type.split("/")
+            else:
+                maintype, subtype = "image", "png"  # fallback
+            msg.get_payload()[1].add_related(
+                img.read(),
+                maintype=maintype,
+                subtype=subtype,
+                cid=f"<{logo_cid}>"
+            )
+    else:
         print("⚠️ Logo not found, sending email without logo.")
 
     # Send email
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login(sender_email, app_password)
             smtp.send_message(msg)
             print(f"✅ Welcome email sent to {receiver_email}")
     except Exception as e:
         print(f"❌ Failed to send email: {e}")
-
-
-# # Example usage
-# if __name__ == "__main__":
-#     email = input("Enter recipient email: ").strip()
-#     name = input("Enter recipient name: ").strip()
-#     send_welcome_email(email, user_name=name or "User")
