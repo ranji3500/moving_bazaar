@@ -65,7 +65,7 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
 # CORS
 FRONTEND_ORIGINS = os.getenv(
     "FRONTEND_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,http://localhost:5004,http://167.71.239.215:5004"
+    "http://localhost:3000,http://localhost:5173,http://localhost:5004,http://167.71.239.215:5004,http://167.71.239.215:3000"
 ).split(",")
 CORS(
     app,
