@@ -14,6 +14,7 @@ import time
 def index():
     return "employee server is running"
 
+
 @employee_bp.route('/create_customer', methods=['POST'])
 @jwt_required()
 def create_customer():
@@ -23,37 +24,70 @@ def create_customer():
 
     logger.info("Create customer request received | user_id=%s | data=%s", user_id, data)
 
-    if not data.get('storeName')  or not data.get('phoneNumber'):
+    # Validate required fields
+    if not data.get('storeName') or not data.get('phoneNumber'):
         logger.warning("Missing required fields for create_customer | user_id=%s | data=%s", user_id, data)
-        return jsonify({"error": "storeName, email, and phoneNumber are required"}), 400
+        return jsonify({"error": "storeName and phoneNumber are required"}), 400
 
     try:
         procedure_name = "insert_customer"
-        params = (
+        params = [
             user_id,
             data.get('storeName'),
-            data.get('email'),
+            data.get('email', ''),  # Empty string if not provided
             data.get('phoneNumber'),
-            data.get('whatsappNumber', None),
-            data.get('addressLine1'),
-            data.get('addressLine2', None),
-            data.get('city'),
+            data.get('whatsappNumber', ''),  # Empty string if not provided
+            data.get('addressLine1', ''),
+            data.get('addressLine2', ''),
+            data.get('city', ''),
             data.get('outstandingPrice', 0.00)
-        )
-        rows_affected = db.insert_using_procedure(procedure_name, params)
+        ]
 
-        # Log success
-        logger.info(
-            "Customer created successfully | user_id=%s | storeName=%s | rows_affected=%s",
-            user_id, data.get('storeName'), rows_affected
-        )
+        # Call stored procedure and get result
+        result = db.call_procedure(procedure_name, params)
 
-        return jsonify({"message": rows_affected}), 201
+        logger.info("Stored procedure result | user_id=%s | result=%s", user_id, result)
+
+        # The stored procedure returns a result set with customerId and message
+        if result and len(result) > 0:
+            customer_id = result[0].get('customerId')
+            message = result[0].get('message')
+
+            # Check if it's a duplicate or error
+            if customer_id is None or 'Duplicate' in message or 'Error' in message:
+                logger.warning(
+                    "Customer creation failed | user_id=%s | message=%s",
+                    user_id, message
+                )
+
+                # Determine appropriate status code
+                if 'Duplicate' in message:
+                    status_code = 409  # Conflict
+                elif 'Invalid user_id' in message:
+                    status_code = 400  # Bad Request
+                else:
+                    status_code = 500  # Internal Server Error
+
+                return jsonify({"error": message}), status_code
+
+            # Success case
+            logger.info(
+                "Customer created successfully | user_id=%s | customer_id=%s | storeName=%s",
+                user_id, customer_id, data.get('storeName')
+            )
+
+            return jsonify({
+                "message": message,
+                "customerId": customer_id
+            }), 201
+        else:
+            logger.error("No result returned from stored procedure | user_id=%s", user_id)
+            return jsonify({"error": "Failed to create customer - no result returned"}), 500
 
     except Exception as e:
-        logger.exception("Exception while creating customer | user_id=%s | data=%s", user_id, data)
+        logger.exception("Exception while creating customer | user_id=%s | data=%s | error=%s",
+                         user_id, data, str(e))
         return jsonify({"error": "Internal server error"}), 500
-# UPDATE Employee
 # UPDATE Employee
 @employee_bp.route('/update_employee/<int:emp_id>', methods=['PUT'])
 @jwt_required()
