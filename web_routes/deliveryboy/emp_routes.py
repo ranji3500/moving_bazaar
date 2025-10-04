@@ -23,7 +23,7 @@ def create_customer():
 
     logger.info("Create customer request received | user_id=%s | data=%s", user_id, data)
 
-    if not data.get('storeName') or not data.get('email') or not data.get('phoneNumber'):
+    if not data.get('storeName')  or not data.get('phoneNumber'):
         logger.warning("Missing required fields for create_customer | user_id=%s | data=%s", user_id, data)
         return jsonify({"error": "storeName, email, and phoneNumber are required"}), 400
 
