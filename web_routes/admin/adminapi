@@ -1,0 +1,7 @@
+GetUsers()
+CALL GetUserSalesSummary();
+call GetStoreSalesSummary();
+call SearchUsers("Karth");
+call SearchStores('vign');
+call GetDashboardSummaryByPeriod('today');
+

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Invoice - Spice Junction</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+:root{--blue:#1F66CC;--text:#222;--muted:#666;--line:#E6E6E6;
+--font:"Calibri","Inter","Helvetica Neue",Arial,sans-serif;}
+*{box-sizing:border-box;}
+body{font-family:var(--font);color:var(--text);margin:0;background:#f7f7f7;}
+.page{width:210mm;min-height:297mm;margin:12mm auto;background:#fff;border-radius:12px;
+box-shadow:0 6px 24px rgba(0,0,0,.08);padding:18mm 16mm;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:12mm;}
+.company h1{font-size:24pt;font-weight:600;margin:0;color:var(--blue);}
+.company .small{font-size:10.5pt;color:var(--muted);}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:6mm 0 8mm;}
+.label{font-size:10.5pt;color:var(--blue);text-transform:uppercase;font-weight:700;margin-bottom:2mm;}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px;}
+.box .line{font-size:11pt;line-height:1.45;margin:0;}
+.table{width:100%;border-collapse:collapse;font-size:11pt;border-radius:10px;overflow:hidden;}
+.table thead th{background:var(--blue);color:#fff;text-transform:uppercase;font-weight:700;padding:8px;}
+.table td{padding:8px;border-bottom:1px solid var(--line);}
+.table td.num{text-align:right;}
+.table td.desc{width:60%;}
+.totals{width:50%;margin-left:auto;margin-top:8mm;font-size:11pt;}
+.totals .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);}
+.totals .row:last-child{border-bottom:none;}
+.balance{font-weight:700;color:var(--blue);font-size:12.5pt;}
+.note{margin-top:10mm;font-size:10.5pt;color:var(--muted);}
+.footer{margin-top:10mm;font-size:9.5pt;color:var(--muted);}
+@media print{ body{background:#fff;} .page{box-shadow:none;margin:0;border-radius:0;} }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="company">
+        <h1>Spice Junction</h1>
+        <div class="small">21, Linking Road, Bandra, Mumbai</div>
+        <div class="small">spice.junction@exampljue.com · 87654321</div>
+      </div>
+      <div class="dates" style="text-align:right">
+        <img src="data:image/png;base64,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" alt="logo" style="width:54px;height:54px;border-radius:50%;object-fit:cover;">
+        <p style="font-size:10.5pt;margin-top:6px">
+          <b>Invoice Date:</b> 24-Aug-2025<br/>
+          <b>Due Date:</b> 31-Aug-2025
+        </p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box">
+        <div class="label">Bill To</div>
+        <p class="line"><b>Spice Junction</b></p>
+        <p class="line">21, Linking Road, Bandra, Mumbai</p>
+        <p class="line">spice.junction@exampljue.com · 87654321</p>
+      </div>
+      <div class="box">
+        <div class="label">Receiver</div>
+        <p class="line"><b>Vignesh Store</b></p>
+        <p class="line">123 Street, Area A, New York</p>
+        <p class="line">vignesh@example.com · 12345678</p>
+        <p class="line"><b>Estimated Delivery:</b> May 29 – May 31</p>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">AED5,100.00</td>
+          <td class="num">AED10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">AED5,100.00</td>
+          <td class="num">AED10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">AED5,100.00</td>
+          <td class="num">AED10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Kids Bicycle</td>
+          <td class="num">2</td>
+          <td class="num">AED5,100.00</td>
+          <td class="num">AED10,400.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">AED45.00</td>
+          <td class="num">AED90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">AED45.00</td>
+          <td class="num">AED90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">AED45.00</td>
+          <td class="num">AED90.00</td>
+        </tr>
+
+        <tr>
+          <td class="desc">Vegetables</td>
+          <td class="num">2</td>
+          <td class="num">AED45.00</td>
+          <td class="num">AED90.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="row"><span><b>Subtotal</b></span><span>AED41,960.00</span></div>
+      <div class="row"><span><b>Discount</b></span><span>AED0.00</span></div>
+      <div class="row"><span><b>Tax Rate</b></span><span>0%</span></div>
+      <div class="row"><span><b>Total Tax</b></span><span>AED0.00</span></div>
+      <div class="row"><span class="balance">Balance Due</span><span class="balance">AED41,960.00</span></div>
+    </div>
+
+    <div class="note"><b>Terms & Instructions:</b> Amount to be paid by the Sender - Spice Junction</div>
+    <div class="footer">Thank you for your business.</div>
+  </div>
+</body>
+</html>
