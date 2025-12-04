@@ -247,7 +247,7 @@ def generate_invoice_background(order_id):
         logger.info(f"PDF successfully created for order_id={order_id} at {pdf_path_}")
 
         # ✅ Step 4: Save to DB
-        paths_json = json.dumps(filenames)
+        paths_json = json.dumps(pdf_path_.parts[-1])
         params = (order_id, paths_json, "invoice")
         db.insertall_using_procedure("insertDocument", params)
         logger.info(f"Inserted invoice document into DB for order_id={order_id}")
